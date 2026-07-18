@@ -1,4 +1,4 @@
-﻿using static Dalamud.Bindings.ImGui.ImGuiHoveredFlags;
+﻿using static ImGuiNET.ImGuiHoveredFlags;
 
 namespace SubmarineTracker.Windows;
 

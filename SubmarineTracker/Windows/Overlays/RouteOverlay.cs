@@ -24,7 +24,7 @@ public class RouteOverlay : Window, IDisposable
     public bool Calculate;
     public readonly HashSet<SubmarineExploration> MustInclude = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
     public RouteOverlay(Plugin plugin) : base("Route Overlay##SubmarineTracker")
     {
@@ -64,7 +64,8 @@ public class RouteOverlay : Window, IDisposable
                 return;
             }
 
-            Position = new Vector2(addonPtr.X - (Size!.Value.X * ImGuiHelpers.GlobalScale), addonPtr.Y + 5);
+            var explorationBaseNode = (AtkUnitBase*) addonPtr;
+            Position = new Vector2(explorationBaseNode->X - (Size!.Value.X * ImGuiHelpers.GlobalScale), explorationBaseNode->Y + 5);
             PositionCondition = ImGuiCond.Always;
 
             if (agent->MapId != Map)

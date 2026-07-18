@@ -78,7 +78,7 @@ public static class Box
 
         // account for padding right/bottom
         var max = ImGui.GetItemRectMax() + new Vector2(iModifier.FPadding.Y, iModifier.FPadding.Z);
-        if(!drawList.Data.IsNull)
+        if(drawList._Data != nint.Zero)
         {
             // second we draw the rectangle and border in channel 0 (will be below)
             drawList.ChannelsSetCurrent(0);

@@ -14,7 +14,7 @@ public class NextOverlay : Window, IDisposable
     private readonly List<(uint, Unlocks.UnlockedFrom)> UnlockPath;
     private (uint Sector, Unlocks.UnlockedFrom UnlockedFrom)? NextSector;
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
     public NextOverlay(Plugin plugin) : base("Next Overlay##SubmarineTracker")
     {
@@ -51,7 +51,8 @@ public class NextOverlay : Window, IDisposable
             if (addonPtr == nint.Zero)
                 return;
 
-            Position = new Vector2(addonPtr.X + 5, addonPtr.Y - (Size!.Value.Y * ImGuiHelpers.GlobalScale));
+            var explorationBaseNode = (AtkUnitBase*) addonPtr;
+            Position = new Vector2(explorationBaseNode->X + 5, explorationBaseNode->Y - (Size!.Value.Y * ImGuiHelpers.GlobalScale));
             PositionCondition = ImGuiCond.Always;
 
             NextSector = null;

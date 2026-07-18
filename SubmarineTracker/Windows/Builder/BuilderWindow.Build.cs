@@ -36,7 +36,7 @@ public partial class BuilderWindow
             }).ToArray();
 
             var fcId = Plugin.GetFCId;
-            if (Plugin.Configuration.ShowOnlyCurrentFC && Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(Plugin.PlayerState.ContentId, out var fcSub))
+            if (Plugin.Configuration.ShowOnlyCurrentFC && Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(Plugin.ClientState.LocalContentId, out var fcSub))
                 existingSubs = Plugin.DatabaseCache.GetSubmarines(fcId).Select(s => Plugin.NameConverter.GetSubIdentifier(s, fcSub)).ToArray();
 
             existingSubs = existingSubs.Prepend(customTerm).ToArray();
@@ -45,7 +45,7 @@ public partial class BuilderWindow
 
             var windowWidth = ImGui.GetWindowWidth() / 2;
             ImGui.SetNextItemWidth(windowWidth - (5.0f * ImGuiHelpers.GlobalScale));
-            ImGui.Combo("##existingSubs", ref CurrentBuild.OriginalSub, existingSubs);
+            ImGui.Combo("##existingSubs", ref CurrentBuild.OriginalSub, existingSubs, existingSubs.Length);
 
             // Calculate first so rank can be changed afterwards
             if (CurrentBuild.OriginalSub != 0)

@@ -28,7 +28,7 @@ public partial class BuilderWindow
 
         var maps = Voyage.MapNames;
         var selectedMap = CurrentBuild.Map;
-        ImGui.Combo("##mapsSelection", ref selectedMap, maps);
+        ImGui.Combo("##mapsSelection", ref selectedMap, maps, maps.Length);
         if (selectedMap != CurrentBuild.Map)
             CurrentBuild.ChangeMap(selectedMap);
 

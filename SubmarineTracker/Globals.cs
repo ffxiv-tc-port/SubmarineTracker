@@ -1,4 +1,4 @@
-global using Dalamud.Bindings.ImGui;
+global using ImGuiNET;
 global using Dalamud.Interface.Utility;
 global using Dalamud.Interface.Colors;
 global using System;

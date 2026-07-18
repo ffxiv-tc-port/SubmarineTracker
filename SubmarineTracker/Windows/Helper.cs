@@ -147,7 +147,7 @@ public static class Helper
     public static void DrawComboWithArrows(string label, ref int selected, ref string[] comboArray, int id = 0)
     {
         using (ImRaii.ItemWidth((ImGui.GetWindowWidth() / 2) - ImGui.GetStyle().ItemSpacing.X))
-            ImGui.Combo(label, ref selected, comboArray);
+            ImGui.Combo(label, ref selected, comboArray, comboArray.Length);
 
         DrawArrows(ref selected, comboArray.Length, id);
     }
@@ -200,7 +200,7 @@ public static class Helper
             return;
         }
 
-        ImGui.Image(texture.Handle, iconSize);
+        ImGui.Image(texture.ImGuiHandle, iconSize);
     }
 
     public static bool Button(string id, FontAwesomeIcon icon, bool disabled = false)

@@ -1,5 +1,6 @@
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using SubmarineTracker.Data;
 using SubmarineTracker.Resources;
 using static SubmarineTracker.Utils;
@@ -13,7 +14,7 @@ public class UnlockOverlay : Window, IDisposable
 
     private readonly List<(uint, Unlocks.UnlockedFrom)> PossibleUnlocks = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
     public UnlockOverlay(Plugin plugin) : base("Unlock Overlay##SubmarineTracker")
     {
@@ -47,8 +48,9 @@ public class UnlockOverlay : Window, IDisposable
             if (addonPtr == nint.Zero)
                 return;
 
+            var explorationBaseNode = (AtkUnitBase*) addonPtr;
             var y = (Plugin.RouteOverlay.Size!.Value.Y * ImGuiHelpers.GlobalScale) + 10.0f;
-            Position = new Vector2(addonPtr.X - (Size!.Value.X * ImGuiHelpers.GlobalScale), addonPtr.Y + y);
+            Position = new Vector2(explorationBaseNode->X - (Size!.Value.X * ImGuiHelpers.GlobalScale), explorationBaseNode->Y + y);
             PositionCondition = ImGuiCond.Always;
 
             var fcSub = Plugin.DatabaseCache.GetFreeCompanies()[Plugin.GetFCId];

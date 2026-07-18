@@ -36,7 +36,7 @@ public partial class BuilderWindow
         {
             // build cache if needed
             Storage.BuildStorageCache();
-            if (Storage.StorageCache.TryGetValue(Plugin.PlayerState.ContentId, out var cachedItems) && cachedItems.TryGetValue((uint)Items.Tanks, out var temp))
+            if (Storage.StorageCache.TryGetValue(Plugin.ClientState.LocalContentId, out var cachedItems) && cachedItems.TryGetValue((uint)Items.Tanks, out var temp))
                 tanks = temp.Count;
         }
 
@@ -124,7 +124,7 @@ public partial class BuilderWindow
                 Helper.TextColored(ImGuiColors.HealerGreen, Language.TermsExp);
 
                 ImGui.TableNextColumn();
-                ImGui.TextUnformatted($"{totalExp:N0}{(AvgBonus ? "*"u8 : ""u8)}");
+                ImGui.TextUnformatted($"{totalExp:N0}{(AvgBonus ? "*" : "")}");
 
                 ImGui.TableNextColumn();
                 Helper.TextColored(ImGuiColors.HealerGreen, Language.TermsExpEachMin);
