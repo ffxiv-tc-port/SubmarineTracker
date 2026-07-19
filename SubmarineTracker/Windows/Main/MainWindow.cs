@@ -11,7 +11,7 @@ public partial class MainWindow : Window, IDisposable
     private static readonly Vector2 IconSize = new(28, 28);
     private static readonly int MaxLength = "Heavens' Eye Materia III".Length;
 
-    public MainWindow(Plugin plugin) : base("Tracker##SubmarineTracker")
+    public MainWindow(Plugin plugin) : base("追蹤器##SubmarineTracker")
     {
         Plugin = plugin;
 

@@ -16,7 +16,7 @@ public class NextOverlay : Window, IDisposable
 
     private ImRaii.Color PushedColor = null!;
 
-    public NextOverlay(Plugin plugin) : base("Next Overlay##SubmarineTracker")
+    public NextOverlay(Plugin plugin) : base("下一趟疊加層##SubmarineTracker")
     {
         Size = new Vector2(300, 60);
 

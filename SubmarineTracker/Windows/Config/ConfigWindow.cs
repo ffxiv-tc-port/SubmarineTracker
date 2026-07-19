@@ -7,7 +7,7 @@ public partial class ConfigWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public ConfigWindow(Plugin plugin) : base("Configuration##SubmarineTracker")
+    public ConfigWindow(Plugin plugin) : base("設定##SubmarineTracker")
     {
         SizeConstraints = new WindowSizeConstraints
         {

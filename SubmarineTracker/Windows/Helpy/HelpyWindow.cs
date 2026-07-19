@@ -6,7 +6,7 @@ public partial class HelpyWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public HelpyWindow(Plugin plugin) : base("Helpy##SubmarineTracker")
+    public HelpyWindow(Plugin plugin) : base("Helpy 助手##SubmarineTracker")
     {
         this.SizeConstraints = new WindowSizeConstraints
         {

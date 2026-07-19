@@ -12,7 +12,7 @@ public partial class BuilderWindow : Window, IDisposable
 
     private string CurrentInput = "";
 
-    public BuilderWindow(Plugin plugin) : base("Builder##SubmarineTracker")
+    public BuilderWindow(Plugin plugin) : base("配置建構器##SubmarineTracker")
     {
         SizeConstraints = new WindowSizeConstraints
         {
