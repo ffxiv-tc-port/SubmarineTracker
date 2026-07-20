@@ -47,7 +47,7 @@ public static class ExcelSheetSelector<T> where T : struct, IExcelRow<T>
             ImGui.SetKeyboardFocusHere(0);
         }
 
-        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref SheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
+        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "搜尋", ref SheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
             FilteredSearchSheet = null;
 
         FilteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, SheetSearchText)).ToArray();

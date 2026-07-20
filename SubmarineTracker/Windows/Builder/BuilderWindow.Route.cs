@@ -149,7 +149,7 @@ public partial class BuilderWindow
 
     private void CommonRoutes()
     {
-        var names = Voyage.Common.Keys.Prepend("None").ToArray();
+        var names = Voyage.Common.Keys.Prepend("無").ToArray();
 
         ImGui.AlignTextToFramePadding();
         Helper.TextColored(ImGuiColors.HealerGreen, Language.BuilderTabRouteCommon);
@@ -159,7 +159,7 @@ public partial class BuilderWindow
         if (!combo.Success)
             return;
 
-        if (ImGui.Selectable("None"))
+        if (ImGui.Selectable("無"))
         {
             CommonSelection = 0;
             CurrentBuild.NotOptimized();

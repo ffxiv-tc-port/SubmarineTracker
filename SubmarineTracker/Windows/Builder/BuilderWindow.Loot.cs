@@ -50,11 +50,11 @@ public partial class BuilderWindow
         using var table = ImRaii.Table("##searchColumn", 5, ImGuiTableFlags.BordersInner | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp);
         if (table.Success)
         {
-            ImGui.TableSetupColumn("Sector");
-            ImGui.TableSetupColumn("Tier");
-            ImGui.TableSetupColumn("Poor");
-            ImGui.TableSetupColumn("Normal");
-            ImGui.TableSetupColumn("Optimal");
+            ImGui.TableSetupColumn("區域");
+            ImGui.TableSetupColumn("品階");
+            ImGui.TableSetupColumn("較差");
+            ImGui.TableSetupColumn("普通");
+            ImGui.TableSetupColumn("最佳");
 
             ImGui.TableHeadersRow();
             foreach (var itemDetail in Importer.ItemDetailed.Items[item.RowId])

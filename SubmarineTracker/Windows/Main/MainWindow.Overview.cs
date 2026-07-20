@@ -63,7 +63,7 @@ public partial class MainWindow
                         var time = "";
                         if (Plugin.Configuration.ShowTimeInOverview)
                         {
-                            time = " Done ";
+                            time = " 已完成 ";
 
                             var returnTime = sub.ReturnTime - DateTime.Now.ToUniversalTime();
                             if (returnTime.TotalSeconds > 0)
