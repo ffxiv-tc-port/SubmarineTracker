@@ -66,10 +66,10 @@
         <value>開啟助手視窗。</value>
     </data>
   <data name="WindowNameOverlay" xml:space="preserve">
-        <value>懸浮窗</value>
+        <value>疊加層</value>
     </data>
   <data name="MenuTooltipOverlay" xml:space="preserve">
-        <value>開啟返回懸浮窗。</value>
+        <value>開啟返回疊加層。</value>
     </data>
   <data name="WindowNameConfig" xml:space="preserve">
         <value>設定</value>
@@ -99,13 +99,13 @@
         <value>Ko-Fi 贊助</value>
     </data>
   <data name="MenuEntryWebsite" xml:space="preserve">
-        <value>Website</value>
+        <value>網站</value>
     </data>
   <data name="MenuTooltipKoFi" xml:space="preserve">
         <value>在瀏覽器中開啟 kofi 頁面。</value>
     </data>
   <data name="MenuTooltipWebsite" xml:space="preserve">
-        <value>Open the loot website in your browser.</value>
+        <value>在瀏覽器中開啟戰利品網站。</value>
     </data>
   <data name="MenuEntrySync" xml:space="preserve">
         <value>同步</value>
@@ -444,10 +444,10 @@
         <value>自動選擇在遊戲航海介面中已選中的潛水艇。</value>
     </data>
   <data name="ConfigTabCheckboxNextOverlay" xml:space="preserve">
-        <value>顯示 下一個 懸浮窗</value>
+        <value>顯示下一趟疊加層</value>
     </data>
   <data name="ConfigTabTooltipNextOverlay" xml:space="preserve">
-        <value>附加到航程選擇介面的懸浮窗
+        <value>附加到航程選擇介面的疊加層
 
 建議下一個需要解鎖或探索的航路點
 滿足以下條件可見: 
@@ -455,20 +455,20 @@
   b) 必須探索某個航路點才能解鎖下張海底圖</value>
     </data>
   <data name="ConfigTabCheckboxUnlockOverlay" xml:space="preserve">
-        <value>顯示 解鎖 懸浮窗</value>
+        <value>顯示解鎖疊加層</value>
     </data>
   <data name="ConfigTabTooltipUnlockOverlay" xml:space="preserve">
-        <value>附加到航程選擇介面的懸浮窗
+        <value>附加到航程選擇介面的疊加層
 
 顯示所有待解鎖的航路點
 滿足以下條件可見: 
   a) 海底圖還有未解鎖的航路點</value>
     </data>
   <data name="ConfigTabCheckboxRouteOverlay" xml:space="preserve">
-        <value>顯示 航線 懸浮窗</value>
+        <value>顯示航線疊加層</value>
     </data>
   <data name="ConfigTabTooltipRouteOverlay" xml:space="preserve">
-        <value>附加到航程選擇介面的懸浮窗
+        <value>附加到航程選擇介面的疊加層
 
 建議最好的航線
 滿足以下條件隱藏: 
@@ -625,7 +625,7 @@
         <value>指定潛水艇:</value>
     </data>
   <data name="ConfigTabOverlay" xml:space="preserve">
-        <value>懸浮窗</value>
+        <value>疊加層</value>
     </data>
   <data name="ConfigTabEntryBehavior" xml:space="preserve">
         <value>行為:</value>
@@ -634,7 +634,7 @@
         <value>遊戲啟動時開啟</value>
     </data>
   <data name="ConfigTabTooltipOpenOnStartup" xml:space="preserve">
-        <value>如果在退出遊戲前懸浮窗已關閉，在下次啟動時開啟懸浮窗</value>
+        <value>如果在退出遊戲前疊加層已關閉，在下次啟動時開啟疊加層</value>
     </data>
   <data name="ConfigTabCheckboxOnReturn" xml:space="preserve">
         <value>返回時</value>
@@ -646,7 +646,7 @@
         <value>自動關閉</value>
     </data>
   <data name="ConfigTabTooltipAutomaticallyClose" xml:space="preserve">
-        <value>假如所有潛水艇都已出航，則自動設定並保持懸浮窗關閉狀態</value>
+        <value>假如所有潛水艇都已出航，則自動設定並保持疊加層關閉狀態</value>
     </data>
   <data name="ConfigTabEntryGeneral" xml:space="preserve">
         <value>通用: </value>
@@ -667,13 +667,13 @@
         <value>顯示首次返回時間</value>
     </data>
   <data name="ConfigTabTooltipFirstReturnTime" xml:space="preserve">
-        <value>在懸浮窗內每個部隊的標題中顯示第一個返回的潛水艇。</value>
+        <value>在疊加層內每個部隊的標題中顯示第一個返回的潛水艇。</value>
     </data>
   <data name="ConfigTabCheckboxSortTimeLowest" xml:space="preserve">
         <value>按最短時間排序</value>
     </data>
   <data name="ConfigTabTooltipSortTimeLowest" xml:space="preserve">
-        <value>按返回時間對懸浮窗標題排序，將覆蓋部隊順序。</value>
+        <value>按返回時間對疊加層標題排序，將覆蓋部隊順序。</value>
     </data>
   <data name="ConfigTabCheckboxReverseSort" xml:space="preserve">
         <value>反向排序</value>
@@ -970,7 +970,7 @@
         <value>航路點</value>
     </data>
   <data name="BuilderTabRouteSelection" xml:space="preserve">
-        <value>單擊選擇航路點</value>
+        <value>點擊選擇航路點</value>
     </data>
   <data name="TermsUnlockedBy" xml:space="preserve">
         <value>解鎖點</value>
@@ -1012,13 +1012,13 @@
         <value>斷點</value>
     </data>
   <data name="BuilderShipCheckboxT1" xml:space="preserve">
-        <value>Use T1</value>
+        <value>使用 T1</value>
     </data>
   <data name="BuilderShipCheckboxT2" xml:space="preserve">
         <value>使用 T2</value>
     </data>
   <data name="BuilderShipCheckboxPoor" xml:space="preserve">
-        <value>Use Poor</value>
+        <value>使用較差</value>
     </data>
   <data name="BuilderShipCheckboxNormal" xml:space="preserve">
         <value>使用普通</value>
@@ -1289,15 +1289,15 @@
     </data>
   <data name="OverseasDiscordTooltip" xml:space="preserve">
         <value>Discord: Overseas Casuals
-Recommended discord for submarines.
-Select the 'Subs' channel and join us
-in '#you-dont-pay-my-sub'.</value>
+推薦的潛水艇 Discord 社群。
+選擇「Subs」頻道,
+到「#you-dont-pay-my-sub」與我們交流。</value>
     </data>
   <data name="WebsiteTooltip" xml:space="preserve">
-        <value>Always up to date unlock and loot information.</value>
+        <value>隨時提供最新的解鎖與戰利品資訊。</value>
     </data>
   <data name="TermWebsite" xml:space="preserve">
-        <value>Website</value>
+        <value>網站</value>
     </data>
   <data name="TermType" xml:space="preserve">
         <value>型別</value>
