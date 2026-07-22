@@ -114,8 +114,8 @@
         <value>從硬碟重新載入所有儲存資料並重新整理快取。</value>
     </data>
   <data name="ErrorNoData" xml:space="preserve">
-        <value>沒有找到此角色的部隊
-請進入你的部隊工坊並檢視航行管制面板中的管理潛水艇頁面。</value>
+        <value>沒有找到此角色的公會
+請進入你的公會工坊並檢視航行管制面板中的管理潛水艇頁面。</value>
     </data>
   <data name="TermsNoVoyage" xml:space="preserve">
         <value>無航次</value>
@@ -296,7 +296,7 @@
         <value>匯出</value>
     </data>
   <data name="LootTabCheckboxExportAll" xml:space="preserve">
-        <value>匯出全部部隊</value>
+        <value>匯出全部公會</value>
     </data>
   <data name="LootTabCheckboxExcludeDate" xml:space="preserve">
         <value>排除日期</value>
@@ -435,7 +435,7 @@
         <value>選項: </value>
     </data>
   <data name="ConfigTabCheckboxCurrentFC" xml:space="preserve">
-        <value>僅顯示當前部隊</value>
+        <value>僅顯示當前公會</value>
     </data>
   <data name="ConfigTabCheckboxAutoSelection" xml:space="preserve">
         <value>自動選擇當前潛水艇</value>
@@ -567,10 +567,10 @@
         <value>管理</value>
     </data>
   <data name="TermsSavedFCs" xml:space="preserve">
-        <value>儲存的部隊</value>
+        <value>儲存的公會</value>
     </data>
   <data name="ConfigTabTooltipSavedFCsDeletion" xml:space="preserve">
-        <value>刪除部隊條目還將刪除其所有戰利品歷史記錄。
+        <value>刪除公會條目還將刪除其所有戰利品歷史記錄。
 按住 Ctrl 鍵刪除</value>
     </data>
   <data name="TermsIgnoredCharacters" xml:space="preserve">
@@ -667,13 +667,13 @@
         <value>顯示首次返回時間</value>
     </data>
   <data name="ConfigTabTooltipFirstReturnTime" xml:space="preserve">
-        <value>在疊加層內每個部隊的標題中顯示第一個返回的潛水艇。</value>
+        <value>在疊加層內每個公會的標題中顯示第一個返回的潛水艇。</value>
     </data>
   <data name="ConfigTabCheckboxSortTimeLowest" xml:space="preserve">
         <value>按最短時間排序</value>
     </data>
   <data name="ConfigTabTooltipSortTimeLowest" xml:space="preserve">
-        <value>按返回時間對疊加層標題排序，將覆蓋部隊順序。</value>
+        <value>按返回時間對疊加層標題排序，將覆蓋公會順序。</value>
     </data>
   <data name="ConfigTabCheckboxReverseSort" xml:space="preserve">
         <value>反向排序</value>
@@ -703,20 +703,20 @@
         <value>鎖定位置</value>
     </data>
   <data name="ConfigTabEntryFCButtons" xml:space="preserve">
-        <value>部隊按鈕: </value>
+        <value>公會按鈕: </value>
     </data>
   <data name="ConfigTabCheckboxShowAll" xml:space="preserve">
         <value>顯示"全部"按鈕</value>
     </data>
   <data name="ConfigTabTooltipShowAll" xml:space="preserve">
-        <value>新增一個"全部"按鈕以方便地檢視所有部隊。
-注意: 太多部隊時會十分混亂。</value>
+        <value>新增一個"全部"按鈕以方便地檢視所有公會。
+注意: 太多公會時會十分混亂。</value>
     </data>
   <data name="ConfigTabCheckboxLetMeResize" xml:space="preserve">
         <value>調整大小</value>
     </data>
   <data name="ConfigTabTooltipLetMeResize" xml:space="preserve">
-        <value>調整部隊按鈕的大小, 
+        <value>調整公會按鈕的大小, 
 但將無法自動調整大小。</value>
     </data>
   <data name="ConfigTabEntryAllSection" xml:space="preserve">
@@ -726,7 +726,7 @@
         <value>顯示航線</value>
     </data>
   <data name="ConfigTabTooltipShowRoute" xml:space="preserve">
-        <value>如果視窗太小，此選項將恢復到每列一個部隊。</value>
+        <value>如果視窗太小，此選項將恢復到每列一個公會。</value>
     </data>
   <data name="ConfigTabCheckboxShowDate" xml:space="preserve">
         <value>顯示日期</value>
@@ -1342,7 +1342,7 @@
         <value>按住 Ctrl 鍵以刪除</value>
     </data>
   <data name="ConfigTabTooltipShowStorageMessage" xml:space="preserve">
-        <value>進入部隊工房時顯示一條青磷水和修理工具狀態的訊息</value>
+        <value>進入公會工坊時顯示一條青磷水和修理工具狀態的訊息</value>
     </data>
   <data name="ConfigTabCheckboxShowStorageMessage" xml:space="preserve">
         <value>顯示倉庫訊息</value>
@@ -1366,7 +1366,7 @@
         <value>Discord Webhook URL</value>
     </data>
   <data name="ConfigTabOfflineModeText4" xml:space="preserve">
-        <value>潛水器 + 部隊名稱 [命名規則]</value>
+        <value>潛水器 + 公會名稱 [命名規則]</value>
     </data>
   <data name="ConfigTabOfflineModeText5" xml:space="preserve">
         <value>返航時間</value>
@@ -1435,7 +1435,7 @@
         <value>未隱藏</value>
     </data>
   <data name="TermsFC" xml:space="preserve">
-        <value>部隊:</value>
+        <value>公會:</value>
     </data>
   <data name="TermsUnlocked" xml:space="preserve">
         <value>已解鎖</value>
