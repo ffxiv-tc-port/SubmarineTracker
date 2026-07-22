@@ -175,7 +175,22 @@ public class Plugin : IDalamudPlugin
 
     private void LanguageChanged(string langCode)
     {
-        Language.Culture = new CultureInfo(langCode);
+        // TC quirk: the TC client's Dalamud reports UiLanguage "tw" — but "tw" is the
+        // ISO 639-1 code for Twi, so new CultureInfo("tw") resolves to a culture with no
+        // satellite assembly and every lookup silently falls back to English.
+        // Map all Chinese/Taiwan language codes onto the zh satellite (Traditional content).
+        try
+        {
+            Language.Culture = langCode.ToLowerInvariant() switch
+            {
+                "tw" or "zh" or "zh-tw" or "zh-hant" or "zh-cn" or "zh-hans" => new CultureInfo("zh-Hant"),
+                _ => new CultureInfo(langCode),
+            };
+        }
+        catch (CultureNotFoundException)
+        {
+            Language.Culture = CultureInfo.InvariantCulture;
+        }
     }
 
     [Command("/stracker")]
