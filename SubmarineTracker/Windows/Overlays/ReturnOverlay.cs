@@ -87,7 +87,7 @@ public class ReturnOverlay : Window, IDisposable
             if (Plugin.Configuration.OverlayFirstReturn)
             {
                 if (NextSub.Return < uint.MaxValue)
-                    returnText = $"   -   {(NextSub.IsDone() ? "完成" : Utils.ToTime(NextSub.LeftoverTime()))}";
+                    returnText = $"   -   {(NextSub.IsDone() ? Language.TermsDone : Utils.ToTime(NextSub.LeftoverTime()))}";
             }
             else
             {

@@ -4307,5 +4307,158 @@ namespace SubmarineTracker.Resources {
                 return ResourceManager.GetString("WindowNameTracker", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sector.
+        /// </summary>
+        internal static string TermsSector {
+            get {
+                return ResourceManager.GetString("TermsSector", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Tier.
+        /// </summary>
+        internal static string TermsTier {
+            get {
+                return ResourceManager.GetString("TermsTier", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string TermsNone {
+            get {
+                return ResourceManager.GetString("TermsNone", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Min %d.
+        /// </summary>
+        internal static string BuilderShipSliderMin {
+            get {
+                return ResourceManager.GetString("BuilderShipSliderMin", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Max %d.
+        /// </summary>
+        internal static string BuilderShipSliderMax {
+            get {
+                return ResourceManager.GetString("BuilderShipSliderMax", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated Stats:.
+        /// </summary>
+        internal static string BuilderStatsCalculated {
+            get {
+                return ResourceManager.GetString("BuilderStatsCalculated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Hit {0} times.
+        /// </summary>
+        internal static string LootTabAnalyseHits {
+            get {
+                return ResourceManager.GetString("LootTabAnalyseHits", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DD {0} times ({1}%).
+        /// </summary>
+        internal static string LootTabAnalyseDD {
+            get {
+                return ResourceManager.GetString("LootTabAnalyseDD", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Collection:.
+        /// </summary>
+        internal static string LootTabCustomCollection {
+            get {
+                return ResourceManager.GetString("LootTabCustomCollection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to over {0}.
+        /// </summary>
+        internal static string LootTabCustomOverLimit {
+            get {
+                return ResourceManager.GetString("LootTabCustomOverLimit", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to from {0} to {1}.
+        /// </summary>
+        internal static string LootTabCustomFromTo {
+            get {
+                return ResourceManager.GetString("LootTabCustomFromTo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}. For further information /xllog..
+        /// </summary>
+        internal static string LootTabExportError {
+            get {
+                return ResourceManager.GetString("LootTabExportError", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Configuration.
+        /// </summary>
+        internal static string WindowTitleConfiguration {
+            get {
+                return ResourceManager.GetString("WindowTitleConfiguration", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Loot Overview.
+        /// </summary>
+        internal static string WindowTitleCustomLoot {
+            get {
+                return ResourceManager.GetString("WindowTitleCustomLoot", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Next Overlay.
+        /// </summary>
+        internal static string WindowTitleNextOverlay {
+            get {
+                return ResourceManager.GetString("WindowTitleNextOverlay", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Route Overlay.
+        /// </summary>
+        internal static string WindowTitleRouteOverlay {
+            get {
+                return ResourceManager.GetString("WindowTitleRouteOverlay", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unlock Overlay.
+        /// </summary>
+        internal static string WindowTitleUnlockOverlay {
+            get {
+                return ResourceManager.GetString("WindowTitleUnlockOverlay", resourceCulture);
+            }
+        }
     }
 }

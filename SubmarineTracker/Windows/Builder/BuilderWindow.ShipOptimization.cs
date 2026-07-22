@@ -144,12 +144,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinSurveillance", ref Target.MinSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, "最小 %d"))
+                    if (ImGui.SliderInt("##shipSliderMinSurveillance", ref Target.MinSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, Language.BuilderShipSliderMin))
                         Target.MaxSurveillance = Math.Max(Target.MinSurveillance, Target.MaxSurveillance);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxSurveillance", ref Target.MaxSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, "最大 %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxSurveillance", ref Target.MaxSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, Language.BuilderShipSliderMax))
                         Target.MinSurveillance = Math.Min(Target.MinSurveillance, Target.MaxSurveillance);
                 }
 
@@ -157,12 +157,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinRetrieval", ref Target.MinRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, "最小 %d"))
+                    if (ImGui.SliderInt("##shipSliderMinRetrieval", ref Target.MinRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, Language.BuilderShipSliderMin))
                         Target.MaxRetrieval = Math.Max(Target.MinRetrieval, Target.MaxRetrieval);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxRetrieval", ref Target.MaxRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, "最大 %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxRetrieval", ref Target.MaxRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, Language.BuilderShipSliderMax))
                         Target.MinRetrieval = Math.Min(Target.MinRetrieval, Target.MaxRetrieval);
                 }
 
@@ -170,12 +170,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinFavor", ref Target.MinFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, "最小 %d"))
+                    if (ImGui.SliderInt("##shipSliderMinFavor", ref Target.MinFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, Language.BuilderShipSliderMin))
                         Target.MaxFavor = Math.Max(Target.MinFavor, Target.MaxFavor);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxFavor", ref Target.MaxFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, "最大 %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxFavor", ref Target.MaxFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, Language.BuilderShipSliderMax))
                         Target.MinFavor = Math.Min(Target.MinFavor, Target.MaxFavor);
                 }
 
@@ -183,12 +183,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinSpeed", ref Target.MinSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, "最小 %d"))
+                    if (ImGui.SliderInt("##shipSliderMinSpeed", ref Target.MinSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, Language.BuilderShipSliderMin))
                         Target.MaxSpeed = Math.Max(Target.MinSpeed, Target.MaxSpeed);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxSpeed", ref Target.MaxSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, "最大 %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxSpeed", ref Target.MaxSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, Language.BuilderShipSliderMax))
                         Target.MinSpeed = Math.Min(Target.MinSpeed, Target.MaxSpeed);
                 }
             }

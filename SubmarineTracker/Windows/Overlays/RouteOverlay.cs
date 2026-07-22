@@ -26,7 +26,7 @@ public class RouteOverlay : Window, IDisposable
 
     private ImRaii.Color PushedColor = null!;
 
-    public RouteOverlay(Plugin plugin) : base("航線疊加層##SubmarineTracker")
+    public RouteOverlay(Plugin plugin) : base($"{Language.WindowTitleRouteOverlay}##SubmarineTracker")
     {
         Size = new Vector2(300, 330);
 

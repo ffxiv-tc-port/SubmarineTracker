@@ -1458,4 +1458,55 @@ in '#you-dont-pay-my-sub'.</value>
   <data name="ConfigTabCheckboxInventorySlotCount" xml:space="preserve">
         <value>顯示物品欄槽數</value>
     </data>
+  <data name="TermsSector" xml:space="preserve">
+        <value>航路點</value>
+    </data>
+  <data name="TermsTier" xml:space="preserve">
+        <value>品階</value>
+    </data>
+  <data name="TermsNone" xml:space="preserve">
+        <value>無</value>
+    </data>
+  <data name="BuilderShipSliderMin" xml:space="preserve">
+        <value>最小 %d</value>
+    </data>
+  <data name="BuilderShipSliderMax" xml:space="preserve">
+        <value>最大 %d</value>
+    </data>
+  <data name="BuilderStatsCalculated" xml:space="preserve">
+        <value>計算數據:</value>
+    </data>
+  <data name="LootTabAnalyseHits" xml:space="preserve">
+        <value>命中 {0} 次</value>
+    </data>
+  <data name="LootTabAnalyseDD" xml:space="preserve">
+        <value>雙重收穫 {0} 次 ({1}%)</value>
+    </data>
+  <data name="LootTabCustomCollection" xml:space="preserve">
+        <value>收藏:</value>
+    </data>
+  <data name="LootTabCustomOverLimit" xml:space="preserve">
+        <value>超過 {0}</value>
+    </data>
+  <data name="LootTabCustomFromTo" xml:space="preserve">
+        <value>從 {0} 到 {1}</value>
+    </data>
+  <data name="LootTabExportError" xml:space="preserve">
+        <value>{0}。詳細資訊請查看 /xllog。</value>
+    </data>
+  <data name="WindowTitleConfiguration" xml:space="preserve">
+        <value>設定</value>
+    </data>
+  <data name="WindowTitleCustomLoot" xml:space="preserve">
+        <value>自訂戰利品總覽</value>
+    </data>
+  <data name="WindowTitleNextOverlay" xml:space="preserve">
+        <value>下一趟疊加層</value>
+    </data>
+  <data name="WindowTitleRouteOverlay" xml:space="preserve">
+        <value>航線疊加層</value>
+    </data>
+  <data name="WindowTitleUnlockOverlay" xml:space="preserve">
+        <value>解鎖疊加層</value>
+    </data>
 </root>

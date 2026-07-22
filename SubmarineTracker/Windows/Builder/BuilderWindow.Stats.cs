@@ -51,7 +51,7 @@ public partial class BuilderWindow
                 ImGui.TextUnformatted(Language.BuilderStatsCategoryBuild);
 
                 ImGui.TableNextColumn();
-                Helper.TextColored(ImGuiColors.DalamudOrange, $"{CurrentBuild} (階級 {CurrentBuild.Rank})");
+                Helper.TextColored(ImGuiColors.DalamudOrange, $"{CurrentBuild} ({Language.TermsRank} {CurrentBuild.Rank})");
 
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(Language.BuilderStatsCategoryRoute);
@@ -61,7 +61,7 @@ public partial class BuilderWindow
             }
         }
 
-        ImGui.TextUnformatted("計算數據：");
+        ImGui.TextUnformatted(Language.BuilderStatsCalculated);
 
         using (var table = ImRaii.Table("##statsColumn", 6))
         {

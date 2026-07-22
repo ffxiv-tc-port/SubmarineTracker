@@ -173,7 +173,7 @@ public partial class LootWindow
             catch (Exception ex)
             {
                 Plugin.Log.Error(ex, "Export went wrong.");
-                Plugin.ChatGui.Print(Utils.ErrorMessage($"{ex.Message}。詳細資訊請查看 /xllog。"));
+                Plugin.ChatGui.Print(Utils.ErrorMessage(Language.LootTabExportError.Format(ex.Message)));
             }
         }
         else

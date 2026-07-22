@@ -149,7 +149,7 @@ public partial class HelpyWindow
                                 .ToArray();
 
         ImGui.AlignTextToFramePadding();
-        Helper.TextColored(ImGuiColors.ParsedOrange, "公會：");
+        Helper.TextColored(ImGuiColors.ParsedOrange, Language.TermsFC);
         ImGui.SameLine();
         Helper.DrawComboWithArrows("##fcSelection", ref FcSelection, ref existingFCs);
     }

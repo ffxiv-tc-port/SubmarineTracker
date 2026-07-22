@@ -1459,4 +1459,55 @@ in '#you-dont-pay-my-sub'.</value>
     <data name="ConfigTabCheckboxInventorySlotCount" xml:space="preserve">
         <value>Show Inventory Slot Count</value>
     </data>
+    <data name="TermsSector" xml:space="preserve">
+        <value>Sector</value>
+    </data>
+    <data name="TermsTier" xml:space="preserve">
+        <value>Tier</value>
+    </data>
+    <data name="TermsNone" xml:space="preserve">
+        <value>None</value>
+    </data>
+    <data name="BuilderShipSliderMin" xml:space="preserve">
+        <value>Min %d</value>
+    </data>
+    <data name="BuilderShipSliderMax" xml:space="preserve">
+        <value>Max %d</value>
+    </data>
+    <data name="BuilderStatsCalculated" xml:space="preserve">
+        <value>Calculated Stats:</value>
+    </data>
+    <data name="LootTabAnalyseHits" xml:space="preserve">
+        <value>Hit {0} times</value>
+    </data>
+    <data name="LootTabAnalyseDD" xml:space="preserve">
+        <value>DD {0} times ({1}%)</value>
+    </data>
+    <data name="LootTabCustomCollection" xml:space="preserve">
+        <value>Collection:</value>
+    </data>
+    <data name="LootTabCustomOverLimit" xml:space="preserve">
+        <value>over {0}</value>
+    </data>
+    <data name="LootTabCustomFromTo" xml:space="preserve">
+        <value>from {0} to {1}</value>
+    </data>
+    <data name="LootTabExportError" xml:space="preserve">
+        <value>{0}. For further information /xllog.</value>
+    </data>
+    <data name="WindowTitleConfiguration" xml:space="preserve">
+        <value>Configuration</value>
+    </data>
+    <data name="WindowTitleCustomLoot" xml:space="preserve">
+        <value>Custom Loot Overview</value>
+    </data>
+    <data name="WindowTitleNextOverlay" xml:space="preserve">
+        <value>Next Overlay</value>
+    </data>
+    <data name="WindowTitleRouteOverlay" xml:space="preserve">
+        <value>Route Overlay</value>
+    </data>
+    <data name="WindowTitleUnlockOverlay" xml:space="preserve">
+        <value>Unlock Overlay</value>
+    </data>
 </root>
