@@ -1,34 +1,19 @@
 using System.Threading.Tasks;
 using Dalamud.Hooking;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.Network;
 using SubmarineTracker.Data;
 
 namespace SubmarineTracker.Manager;
 
-public class HookManager
+public unsafe class HookManager
 {
-    private const string PacketReceiverSig = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 44 0F B6 46 ?? 4C 8D 4E 17";
-    private const string PacketReceiverSigCN = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 44 0F B6 46 ?? 4C 8D 4E 17"; // same sig at this time
-    private delegate void PacketDelegate(uint param1, ushort param2, sbyte param3, nint param4, char param5);
-    private readonly Hook<PacketDelegate> PacketHandlerHook;
+    private Hook<PacketDispatcher.Delegates.HandleEventYieldPacket> PacketHandlerHook { get; init; }
 
     public HookManager()
     {
-        // Try to resolve the CN sig if normal one fails ...
-        // Doing this because CN people use an outdated version that still uploads data
-        // so trying to get them at least somewhat up to date
-        nint packetReceiverPtr;
-        try
-        {
-            packetReceiverPtr = Plugin.SigScanner.ScanText(PacketReceiverSig);
-        }
-        catch (Exception)
-        {
-            Plugin.Log.Error("Exception in sig scan, maybe CN client?");
-            packetReceiverPtr = Plugin.SigScanner.ScanText(PacketReceiverSigCN);
-        }
-
-        PacketHandlerHook = Plugin.Hook.HookFromAddress<PacketDelegate>(packetReceiverPtr, PacketReceiver);
+        PacketHandlerHook = Plugin.Hook.HookFromAddress<PacketDispatcher.Delegates.HandleEventYieldPacket>(PacketDispatcher.MemberFunctionPointers.HandleEventYieldPacket, PacketReceiver);
         PacketHandlerHook.Enable();
     }
 
@@ -37,12 +22,12 @@ public class HookManager
         PacketHandlerHook.Dispose();
     }
 
-    private unsafe void PacketReceiver(uint param1, ushort param2, sbyte param3, nint param4, char param5)
+    private void PacketReceiver(EventId id, short scene, byte responseId, int* intParams, byte argCount)
     {
-        PacketHandlerHook.Original(param1, param2, param3, param4, param5);
+        PacketHandlerHook.Original(id, scene, responseId, intParams, argCount);
 
         // We only care about voyage results
-        if (param1 != 721343)
+        if (id != 721343)
             return;
 
         try

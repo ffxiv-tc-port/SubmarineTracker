@@ -13,7 +13,7 @@ public class ReturnOverlay : Window, IDisposable
     private Submarine NextSub = new();
     private (int OnRoute, int Done) VoyageStats = (0, 0);
 
-    private ImRaii.Color PushedColor = null!;
+    private ImRaii.ColorDisposable PushedColor = null!;
 
     public ReturnOverlay(Plugin plugin) : base("Submarines: 0|0###submarineOverlay")
     {

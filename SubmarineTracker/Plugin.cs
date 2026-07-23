@@ -41,6 +41,7 @@ public class Plugin : IDalamudPlugin
     [PluginService] public static IPluginLog Log { get; private set; } = null!;
     [PluginService] public static INotificationManager Notification { get; private set; } = null!;
     [PluginService] public static IDtrBar DtrBar { get; private set; } = null!;
+    [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] public static IObjectTable ObjectTable { get; private set; } = null!;
 
     public static Configuration Configuration { get; private set; } = null!;
@@ -257,7 +258,7 @@ public class Plugin : IDalamudPlugin
             LoadFCOrder();
         }
 
-        var local = ClientState.LocalPlayer;
+        var local = ObjectTable.LocalPlayer;
         if (local == null)
             return;
 
@@ -288,7 +289,7 @@ public class Plugin : IDalamudPlugin
             ChatGui.Print(Utils.SuccessMessage(Language.NotificationsUploadOptOut));
         }
 
-        if (Configuration.IgnoredCharacters.ContainsKey(ClientState.LocalContentId))
+        if (Configuration.IgnoredCharacters.ContainsKey(PlayerState.ContentId))
         {
             if (ShowIgnoredWarning)
             {
