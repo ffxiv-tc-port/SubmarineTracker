@@ -13,7 +13,7 @@ public class UnlockOverlay : Window, IDisposable
 
     private readonly List<(uint, Unlocks.UnlockedFrom)> PossibleUnlocks = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
     public UnlockOverlay(Plugin plugin) : base($"{Language.WindowTitleUnlockOverlay}##SubmarineTracker")
     {
