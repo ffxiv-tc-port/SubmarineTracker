@@ -2,7 +2,7 @@
 <Project Sdk="Dalamud.NET.Sdk/12.0.2">
     <PropertyGroup>
         <Authors>Infi</Authors>
-        <PackageProjectUrl>https://github.com/Lother/SubmarineTracker</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/ffxiv-tc-port/SubmarineTracker</PackageProjectUrl>
     </PropertyGroup>
 
     <PropertyGroup>
