@@ -278,7 +278,7 @@
         <value>以上獎勵已從總共 {1} 次航行 ({2} 艘潛水艇) 中獲得 {0}。</value>
     </data>
   <data name="LootTabCustomMoneyMade" xml:space="preserve">
-        <value>為你共賺取到 {0:N0} 金幣。</value>
+        <value>為你共賺取到 {0:N0} Gil。</value>
     </data>
   <data name="TermsOptions" xml:space="preserve">
         <value>選項</value>
