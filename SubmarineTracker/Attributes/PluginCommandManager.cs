@@ -1,6 +1,7 @@
 using Dalamud.Game.Command;
 using System.Reflection;
 using Dalamud.Plugin.Services;
+using SubmarineTracker.Resources;
 
 namespace SubmarineTracker.Attributes
 {
@@ -50,7 +51,7 @@ namespace SubmarineTracker.Attributes
 
             var commandInfo = new CommandInfo(handlerDelegate)
             {
-                HelpMessage = helpMessage?.HelpMessage ?? string.Empty,
+                HelpMessage = LocalizeHelpMessage(command!.Command, helpMessage?.HelpMessage),
                 ShowInHelp = doNotShowInHelp == null,
             };
 
@@ -65,6 +66,27 @@ namespace SubmarineTracker.Attributes
             }
 
             return commandInfoTuples;
+        }
+
+        /// <summary>
+        /// HelpMessage 會顯示在 /xlhelp 和 Dalamud 插件安裝器的指令清單裡,原本直接沿用
+        /// [HelpMessage] 屬性上的英文。屬性參數必須是編譯期常數,沒辦法在屬性上做在地化,
+        /// 所以改在註冊當下依指令名去 resx 找 CommandHelp_&lt;指令&gt;;找不到就沿用屬性上的英文原文。
+        /// </summary>
+        private static string LocalizeHelpMessage(string command, string? fallback)
+        {
+            if (string.IsNullOrEmpty(fallback))
+                return string.Empty;
+
+            try
+            {
+                return Language.ResourceManager.GetString($"CommandHelp_{command.TrimStart('/')}", Language.Culture) ?? fallback;
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Warning(e, "Unable to localize help message for {Command}", command);
+                return fallback;
+            }
         }
 
         public void Dispose()

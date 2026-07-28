@@ -1509,4 +1509,23 @@
   <data name="WindowTitleUnlockOverlay" xml:space="preserve">
         <value>解鎖疊加層</value>
     </data>
+  <data name="CommandHelp_stracker" xml:space="preserve">
+        <value>開啟追蹤器</value>
+    </data>
+  <data name="CommandHelp_sbuilder" xml:space="preserve">
+        <value>開啟配置器</value>
+    </data>
+  <data name="CommandHelp_sloot" xml:space="preserve">
+        <value>開啟自訂戰利品總覽
+/sloot copy - 以目前設定將戰利品紀錄以 CSV 格式匯出至剪貼簿</value>
+    </data>
+  <data name="CommandHelp_shelpy" xml:space="preserve">
+        <value>開啟助手視窗，內含大量實用資訊</value>
+    </data>
+  <data name="CommandHelp_sconf" xml:space="preserve">
+        <value>開啟設定</value>
+    </data>
+  <data name="CommandHelp_soverlay" xml:space="preserve">
+        <value>開啟疊加層</value>
+    </data>
 </root>
