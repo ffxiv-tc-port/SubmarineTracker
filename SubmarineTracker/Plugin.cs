@@ -257,7 +257,7 @@ public class Plugin : IDalamudPlugin
             LoadFCOrder();
         }
 
-        var local = ObjectTable.LocalPlayer;
+        var local = ClientState.LocalPlayer;
         if (local == null)
             return;
 

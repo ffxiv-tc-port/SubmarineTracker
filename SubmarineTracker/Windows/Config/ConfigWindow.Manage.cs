@@ -127,7 +127,7 @@ public partial class ConfigWindow
             ImGui.TableNextColumn();
             if (ImGui.Button(Language.TermsAddCurrentCharacter))
             {
-                var local = Plugin.ObjectTable.LocalPlayer;
+                var local = Plugin.ClientState.LocalPlayer;
                 if (local != null)
                 {
                     var name = local.Name.TextValue;
