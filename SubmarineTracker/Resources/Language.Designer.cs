@@ -1187,6 +1187,15 @@ namespace SubmarineTracker.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prevent ESC Closing Windows.
+        /// </summary>
+        internal static string ConfigTabCheckboxPreventEscape {
+            get {
+                return ResourceManager.GetString("ConfigTabCheckboxPreventEscape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Repair Status After Voyage Return.
         /// </summary>
         internal static string ConfigTabCheckboxRepairAfterVoyage {
@@ -3310,11 +3319,12 @@ namespace SubmarineTracker.Resources {
         
         /// <summary>
         ///   Looks up a localized string similar to Submarine above threshold and MustInclude is empty
-        ///Check your config for higher level suggestions..
+        ///Check your config for higher level suggestions.
+        ///Config -&gt; Builder -&gt; Highest Rank.
         /// </summary>
-        internal static string RouteOverlayTooltipHighRank {
+        internal static string RouteOverlayTooltipHighRankWithTip {
             get {
-                return ResourceManager.GetString("RouteOverlayTooltipHighRank", resourceCulture);
+                return ResourceManager.GetString("RouteOverlayTooltipHighRankWithTip", resourceCulture);
             }
         }
         

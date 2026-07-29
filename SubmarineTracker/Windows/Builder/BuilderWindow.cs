@@ -10,6 +10,9 @@ public partial class BuilderWindow : Window, IDisposable
 
     public Build.RouteBuild CurrentBuild = new();
 
+    private Submarine CurrentSubmarine = new();
+    private FreeCompany FakeFC = FreeCompany.CreateFakeFC();
+
     private string CurrentInput = "";
 
     public BuilderWindow(Plugin plugin) : base($"{Language.WindowNameBuilder}##SubmarineTracker")
@@ -21,6 +24,7 @@ public partial class BuilderWindow : Window, IDisposable
         };
 
         Plugin = plugin;
+        RespectCloseHotkey = !Plugin.Configuration.PreventEscapeClosing;
 
         InitializeShip();
         InitializeLeveling();
@@ -38,12 +42,10 @@ public partial class BuilderWindow : Window, IDisposable
         {
             if (child.Success)
             {
-                var sub = new Submarine();
-
                 using var tabBar = ImRaii.TabBar("SubBuilderTab");
                 if (tabBar.Success)
                 {
-                    BuildTab(ref sub);
+                    BuildTab();
 
                     RouteTab();
 
@@ -59,7 +61,7 @@ public partial class BuilderWindow : Window, IDisposable
                 }
 
                 if (!infoTabOpen && !shipTabOpen)
-                    BuildStats(ref sub);
+                    BuildStats();
             }
         }
 
