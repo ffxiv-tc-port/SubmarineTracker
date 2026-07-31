@@ -237,6 +237,7 @@ public class ReturnOverlay : Window, IDisposable
 
     public string OverlayNumbers()
     {
-        return $"{VoyageStats.Done} | {VoyageStats.OnRoute}";
+        // DTR 空間很擠：用 1/27 取代 1 | 27，語意相同但省掉兩個空白與分隔線。
+        return $"{VoyageStats.Done}/{VoyageStats.OnRoute}";
     }
 }
