@@ -24,7 +24,7 @@ public unsafe class HookManager
 
     private void PacketReceiver(EventId id, short scene, byte responseId, int* intParams, byte argCount)
     {
-        PacketHandlerHook.Original(id, scene, responseId, intParams, argCount);
+        PacketHandlerHook.OriginalDisposeSafe(id, scene, responseId, intParams, argCount);
 
         // We only care about voyage results
         if (id != 721343)
