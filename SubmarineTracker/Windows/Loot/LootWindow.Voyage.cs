@@ -93,7 +93,10 @@ public partial class LootWindow
             var primaryItem = Sheets.GetItem(detailedLoot.Primary);
             var additionalItem = Sheets.GetItem(detailedLoot.Additional);
 
-            Helper.TextColored(ImGuiColors.HealerGreen, Sheets.ExplorationSheet.GetRow(detailedLoot.Sector).ToName());
+            // Sector 是從 SQLite 歷史紀錄回讀的持久化值，不保證存在於本地資料表。
+            // 這裡在 Draw 路徑上，裸 GetRow 查不到就擲例外，整個視窗會消失。
+            var sectorRow = Sheets.ExplorationSheet.GetRowOrDefault(detailedLoot.Sector);
+            Helper.TextColored(ImGuiColors.HealerGreen, sectorRow == null ? $"{Language.TermsUnknown} ({detailedLoot.Sector})" : sectorRow.Value.ToName());
             using var indent = ImRaii.PushIndent(10.0f);
             if (stats.Valid)
                 ImGui.TextUnformatted($"DD: {ProcToText(detailedLoot.FavProc)} --- Ret: {ProcToText(detailedLoot.PrimaryRetProc)}");

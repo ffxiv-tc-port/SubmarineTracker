@@ -369,9 +369,16 @@ public record Submarine
         var lowest = 30000;
         foreach (var (part, durability) in PartConditions)
         {
+            // PartConditions 與 Points 都是從 SQLite 回讀的持久化值，id 不保證存在於本地
+            // 資料表；裸 GetRow 查不到就擲例外，而這個方法在主視窗與返航疊加層的 Draw
+            // 路徑上。查不到的零件／海域直接略過，寧可預測值偏樂觀也不要讓視窗消失。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             int damaged = durability;
             foreach (var sector in Points)
-                damaged -= (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged -= (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (lowest > damaged)
                 lowest = damaged;
@@ -402,9 +409,14 @@ public record Submarine
         var highestDamage = 1;
         foreach (var (part, _) in PartConditions)
         {
+            // 同 PredictDurability：持久化的零件／海域 id 查不到就略過，不要擲例外。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             var damaged = 0;
             foreach (var sector in Points)
-                damaged += (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged += (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (highestDamage < damaged)
                 highestDamage = damaged;
