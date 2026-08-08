@@ -90,8 +90,12 @@ public partial class LootWindow
 
         foreach (var detailedLoot in loot)
         {
-            var primaryItem = Sheets.GetItem(detailedLoot.Primary);
-            var additionalItem = Sheets.GetItem(detailedLoot.Additional);
+            // Primary / Additional 與底下的 Sector 是同一份 SQLite 歷史紀錄、同一個問題：
+            // 物品 id 也是持久化值，裸 GetRow 查不到就擲例外，整個視窗會消失。
+            // 這裡刻意不動 Sheets.GetItem 的簽名（全 repo 大量使用，改了會擴散），
+            // 改在呼叫點驗，退路與 Sector 一致：顯示「未知 (id)」。
+            var primaryItem = Sheets.ItemSheet.GetRowOrDefault(detailedLoot.Primary);
+            var additionalItem = Sheets.ItemSheet.GetRowOrDefault(detailedLoot.Additional);
 
             // Sector 是從 SQLite 歷史紀錄回讀的持久化值，不保證存在於本地資料表。
             // 這裡在 Draw 路徑上，裸 GetRow 查不到就擲例外，整個視窗會消失。
@@ -111,9 +115,10 @@ public partial class LootWindow
             ImGui.TableSetupColumn("##survProc", ImGuiTableColumnFlags.WidthStretch, 0.4f);
 
             ImGui.TableNextColumn();
-            Helper.DrawScaledIcon(primaryItem.Icon, IconSize);
+            if (primaryItem != null)
+                Helper.DrawScaledIcon(primaryItem.Value.Icon, IconSize);
 
-            var name = primaryItem.Name.ExtractText();
+            var name = primaryItem != null ? primaryItem.Value.Name.ExtractText() : $"{Language.TermsUnknown} ({detailedLoot.Primary})";
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(name.Truncate(MaxLength));
             if (ImGui.IsItemHovered())
@@ -130,9 +135,10 @@ public partial class LootWindow
             if (detailedLoot.ValidAdditional)
             {
                 ImGui.TableNextColumn();
-                Helper.DrawScaledIcon(additionalItem.Icon, IconSize);
+                if (additionalItem != null)
+                    Helper.DrawScaledIcon(additionalItem.Value.Icon, IconSize);
 
-                name = additionalItem.Name.ExtractText();
+                name = additionalItem != null ? additionalItem.Value.Name.ExtractText() : $"{Language.TermsUnknown} ({detailedLoot.Additional})";
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(name.Truncate(MaxLength));
                 if (ImGui.IsItemHovered())
