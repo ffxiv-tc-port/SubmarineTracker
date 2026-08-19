@@ -43,6 +43,12 @@ public unsafe class HookManager
             var sub = current.Value;
 
             var fcId = Plugin.GetFCId;
+            // 這是唯一會把 fcId 寫進資料庫的路徑(Loot.FreeCompanyId)。GetFCId 取不到部隊時回 0,
+            // 讓 0 寫下去會在使用者存檔裡留下歸屬不明、之後也對不回任何部隊的戰利品列。
+            // 語意與 Plugin.cs 的 `if (fcId == 0) return;` 一致:寧可少記一次,不要寫髒資料。
+            if (fcId == 0)
+                return;
+
             var register = sub->RegisterTime;
             var returnTime = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // sub->ReturnTime is 0 at this point
 
