@@ -44,6 +44,7 @@ public class Plugin : IDalamudPlugin
     [PluginService] public static INotificationManager Notification { get; private set; } = null!;
     [PluginService] public static IDtrBar DtrBar { get; private set; } = null!;
     [PluginService] public static IObjectTable ObjectTable { get; private set; } = null!;
+    [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
 
     public static Configuration Configuration { get; private set; } = null!;
     public static FileDialogManager FileDialogManager { get; private set; } = null!;
@@ -259,7 +260,7 @@ public class Plugin : IDalamudPlugin
             LoadFCOrder();
         }
 
-        var local = ClientState.LocalPlayer;
+        var local = ObjectTable.LocalPlayer;
         if (local == null)
             return;
 
@@ -290,7 +291,7 @@ public class Plugin : IDalamudPlugin
             ChatGui.Print(Utils.SuccessMessage(Language.NotificationsUploadOptOut));
         }
 
-        if (Configuration.IgnoredCharacters.ContainsKey(ClientState.LocalContentId))
+        if (Configuration.IgnoredCharacters.ContainsKey(PlayerState.ContentId))
         {
             if (ShowIgnoredWarning)
             {
@@ -436,7 +437,26 @@ public class Plugin : IDalamudPlugin
     public void OpenConfig() => ConfigWindow.Toggle();
     #endregion
 
-    public static unsafe ulong GetFCId => InfoProxyFreeCompany.Instance()->Id;
+    /// <summary>
+    /// 目前部隊的 Id。InfoProxyFreeCompany 走 InfoModule 鏈(UIModule／InfoModule 皆可能為 null,
+    /// proxy 未註冊時 GetInfoProxyById 也回 null),未登入／登出瞬間裸解參考就是 AccessViolation,
+    /// 而 AVE 在 .NET Core 是 corrupted-state exception,呼叫端的 try/catch 完全攔不到。
+    ///
+    /// 取不到時回 0。這不是新造的哨兵值:沒有部隊的玩家本來就是 0,而 SubmarineVoyageInterface
+    /// 早就寫著 `if (fcId == 0) return;` —— 「不知道」因此落在一個既有且已被處理的狀態上,
+    /// 不必動到 13 個呼叫端。唯讀消費點全都安全退化:TryGetValue／ContainsKey 落空、
+    /// GetValueOrDefault 回 FakeFC、GetSubmarines(0) 回空陣列;三個直接用索引子的疊加層會丟
+    /// KeyNotFoundException,那是可攔截、不破壞行程的例外,嚴格優於現在的 AVE。
+    /// ⚠️ 唯一會把這個值寫進資料庫的是 HookManager 的戰利品寫入,那裡另外明確擋掉 0。
+    /// </summary>
+    public static unsafe ulong GetFCId
+    {
+        get
+        {
+            var freeCompany = InfoProxyFreeCompany.Instance();
+            return freeCompany == null ? 0 : freeCompany->Id;
+        }
+    }
 
     public static IEnumerable<ulong> GetFCOrderWithoutHidden()
     {

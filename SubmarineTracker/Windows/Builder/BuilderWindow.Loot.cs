@@ -59,10 +59,15 @@ public partial class BuilderWindow
             ImGui.TableHeadersRow();
             foreach (var itemDetail in Importer.ItemDetailed.Items[item.RowId])
             {
-                var subRow = Sheets.ExplorationSheet.GetRow(itemDetail.Sector);
+                // Sector 來自捆綁的外部資料檔（msgpack），id 不保證存在於本地資料表。
+                // 這裡在 Draw 路徑上，裸 GetRow 查不到就擲例外，整個視窗會消失。
+                var subRow = Sheets.ExplorationSheet.GetRowOrDefault(itemDetail.Sector);
 
                 ImGui.TableNextColumn();
-                ImGui.TextUnformatted($"{UpperCaseStr(subRow.Destination)} ({NumToLetter(subRow.RowId, true)} - {MapToThreeLetter(subRow.RowId, true)})");
+                if (subRow == null)
+                    ImGui.TextUnformatted($"{Language.TermsUnknown} ({itemDetail.Sector})");
+                else
+                    ImGui.TextUnformatted($"{UpperCaseStr(subRow.Value.Destination)} ({NumToLetter(subRow.Value.RowId, true)} - {MapToThreeLetter(subRow.Value.RowId, true)})");
 
                 ImGui.TableNextColumn();
                 Helper.CenterText($"{itemDetail.Tier}");

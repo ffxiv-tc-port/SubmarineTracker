@@ -369,9 +369,16 @@ public record Submarine
         var lowest = 30000;
         foreach (var (part, durability) in PartConditions)
         {
+            // PartConditions 與 Points 都是從 SQLite 回讀的持久化值，id 不保證存在於本地
+            // 資料表；裸 GetRow 查不到就擲例外，而這個方法在主視窗與返航疊加層的 Draw
+            // 路徑上。查不到的零件／海域直接略過，寧可預測值偏樂觀也不要讓視窗消失。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             int damaged = durability;
             foreach (var sector in Points)
-                damaged -= (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged -= (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (lowest > damaged)
                 lowest = damaged;
@@ -402,9 +409,14 @@ public record Submarine
         var highestDamage = 1;
         foreach (var (part, _) in PartConditions)
         {
+            // 同 PredictDurability：持久化的零件／海域 id 查不到就略過，不要擲例外。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             var damaged = 0;
             foreach (var sector in Points)
-                damaged += (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged += (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (highestDamage < damaged)
                 highestDamage = damaged;
@@ -415,7 +427,12 @@ public record Submarine
 
     public (uint Rank, double Exp) PredictExpGrowth()
     {
-        var currentRank = Sheets.RankSheet.GetRow(Rank);
+        // Rank 是從 SQLite 回讀的持久化值，不保證存在於本地的 SubmarineRank 表；
+        // 裸 GetRow 查不到就擲例外，而這個方法在 Draw 路徑上。
+        // 查不到時回既有的「新潛艇、尚無航程」那個回傳形狀。
+        if (!Sheets.RankSheet.TryGetRow(Rank, out var currentRank))
+            return (Rank, 0.0);
+
         var leftover = CExp + Sectors.CalculateExpForSectors(Voyage.ToExplorationArray(Points), Build);
 
         // This happens whenever the user has a new sub with no voyage
@@ -429,8 +446,13 @@ public record Submarine
 
             if (leftover > currentRank.ExpToNext)
             {
+                // 持久化的 Rank 若已超過 LastRank，上面那個 == 比較永遠不會成立，
+                // RowId + 1 會一路走出表尾。先驗再扣，讓 leftover 與 currentRank 保持一致。
+                if (!Sheets.RankSheet.TryGetRow(currentRank.RowId + 1, out var nextRank))
+                    break;
+
                 leftover -= currentRank.ExpToNext;
-                currentRank = Sheets.RankSheet.GetRow(currentRank.RowId + 1);
+                currentRank = nextRank;
             }
             else
             {
