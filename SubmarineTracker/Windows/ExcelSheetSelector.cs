@@ -1,5 +1,6 @@
 using System.Collections;
 using Lumina.Excel;
+using SubmarineTracker.Resources;
 
 // From: https://github.com/UnknownX7/Hypostasis/blob/master/ImGui/ExcelSheet.cs
 namespace SubmarineTracker.Windows;
@@ -47,7 +48,7 @@ public static class ExcelSheetSelector<T> where T : struct, IExcelRow<T>
             ImGui.SetKeyboardFocusHere(0);
         }
 
-        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref SheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
+        if (ImGui.InputTextWithHint("##ExcelSheetSearch", Language.TermSearch, ref SheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
             FilteredSearchSheet = null;
 
         FilteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, SheetSearchText)).ToArray();

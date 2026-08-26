@@ -13,7 +13,7 @@ public class ReturnOverlay : Window, IDisposable
     private Submarine NextSub = new();
     private (int OnRoute, int Done) VoyageStats = (0, 0);
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
     public ReturnOverlay(Plugin plugin) : base("Submarines: 0|0###submarineOverlay")
     {
@@ -87,7 +87,7 @@ public class ReturnOverlay : Window, IDisposable
             if (Plugin.Configuration.OverlayFirstReturn)
             {
                 if (NextSub.Return < uint.MaxValue)
-                    returnText = $"   -   {(NextSub.IsDone() ? "Done" : Utils.ToTime(NextSub.LeftoverTime()))}";
+                    returnText = $"   -   {(NextSub.IsDone() ? Language.TermsDone : Utils.ToTime(NextSub.LeftoverTime()))}";
             }
             else
             {

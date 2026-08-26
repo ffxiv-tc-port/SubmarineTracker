@@ -1,4 +1,5 @@
 using Dalamud.Interface.Windowing;
+using SubmarineTracker.Resources;
 
 namespace SubmarineTracker.Windows.Helpy;
 
@@ -6,7 +7,7 @@ public partial class HelpyWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public HelpyWindow(Plugin plugin) : base("Helpy##SubmarineTracker")
+    public HelpyWindow(Plugin plugin) : base($"{Language.WindowNameHelpy}##SubmarineTracker")
     {
         this.SizeConstraints = new WindowSizeConstraints
         {

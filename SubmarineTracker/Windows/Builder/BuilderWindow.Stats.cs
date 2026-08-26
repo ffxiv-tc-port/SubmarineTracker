@@ -36,7 +36,7 @@ public partial class BuilderWindow
         {
             // build cache if needed
             Storage.BuildStorageCache();
-            if (Storage.StorageCache.TryGetValue(Plugin.PlayerState.ContentId, out var cachedItems) && cachedItems.TryGetValue((uint)Items.Tanks, out var temp))
+            if (Storage.StorageCache.TryGetValue(Plugin.ClientState.LocalContentId, out var cachedItems) && cachedItems.TryGetValue((uint)Items.Tanks, out var temp))
                 tanks = temp.Count;
         }
 
@@ -51,7 +51,7 @@ public partial class BuilderWindow
                 ImGui.TextUnformatted(Language.BuilderStatsCategoryBuild);
 
                 ImGui.TableNextColumn();
-                Helper.TextColored(ImGuiColors.DalamudOrange, $"{CurrentBuild} (Rank {CurrentBuild.Rank})");
+                Helper.TextColored(ImGuiColors.DalamudOrange, $"{CurrentBuild} ({Language.TermsRank} {CurrentBuild.Rank})");
 
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(Language.BuilderStatsCategoryRoute);
@@ -61,7 +61,7 @@ public partial class BuilderWindow
             }
         }
 
-        ImGui.TextUnformatted("Calculated Stats:");
+        ImGui.TextUnformatted(Language.BuilderStatsCalculated);
 
         using (var table = ImRaii.Table("##statsColumn", 6))
         {

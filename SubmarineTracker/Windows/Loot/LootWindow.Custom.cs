@@ -37,7 +37,7 @@ public partial class LootWindow
 
         ImGuiHelpers.ScaledDummy(5.0f);
 
-        var longText = "Collection:";
+        var longText = Language.LootTabCustomCollection;
         var length = ImGui.CalcTextSize(longText).X + (10.0f * ImGuiHelpers.GlobalScale);
 
         Plugin.EnsureFCOrderSafety();
@@ -123,7 +123,7 @@ public partial class LootWindow
             return;
 
         var pos = ImGui.GetCursorPos();
-        var limit = useLimit ? Plugin.Configuration.DateLimit != DateLimit.None ? $"over {Plugin.Configuration.DateLimit.GetName()}" : $"from {CustomMinDate.ToLongDateWithoutWeekday()} to {CustomMaxDate.ToLongDateWithoutWeekday()}" : "";
+        var limit = useLimit ? Plugin.Configuration.DateLimit != DateLimit.None ? Language.LootTabCustomOverLimit.Format(Plugin.Configuration.DateLimit.GetName()) : Language.LootTabCustomFromTo.Format(CustomMinDate.ToLongDateWithoutWeekday(), CustomMaxDate.ToLongDateWithoutWeekday()) : "";
         ImGui.TextWrapped(Language.LootTabCustomRewardAmount.Format(limit, NumVoyages, NumSubs));
         ImGui.TextWrapped(Language.LootTabCustomMoneyMade.Format(moneyMade));
 

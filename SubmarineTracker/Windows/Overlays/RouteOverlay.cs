@@ -24,9 +24,9 @@ public class RouteOverlay : Window, IDisposable
     public bool Calculate;
     public readonly HashSet<SubmarineExploration> MustInclude = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
-    public RouteOverlay(Plugin plugin) : base("Route Overlay##SubmarineTracker")
+    public RouteOverlay(Plugin plugin) : base($"{Language.WindowTitleRouteOverlay}##SubmarineTracker")
     {
         Size = new Vector2(300, 330);
 

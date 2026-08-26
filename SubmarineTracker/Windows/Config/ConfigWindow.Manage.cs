@@ -134,7 +134,7 @@ public partial class ConfigWindow
                     var tag = local.CompanyTag.TextValue;
                     var world = local.HomeWorld.Value.Name.ExtractText();
 
-                    Plugin.Configuration.IgnoredCharacters.Add(Plugin.PlayerState.ContentId, $"({tag}) {name}@{world}");
+                    Plugin.Configuration.IgnoredCharacters.Add(Plugin.ClientState.LocalContentId, $"({tag}) {name}@{world}");
                     Plugin.Configuration.Save();
                 }
             }

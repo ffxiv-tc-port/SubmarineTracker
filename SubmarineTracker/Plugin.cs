@@ -41,7 +41,6 @@ public class Plugin : IDalamudPlugin
     [PluginService] public static IPluginLog Log { get; private set; } = null!;
     [PluginService] public static INotificationManager Notification { get; private set; } = null!;
     [PluginService] public static IDtrBar DtrBar { get; private set; } = null!;
-    [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] public static IObjectTable ObjectTable { get; private set; } = null!;
 
     public static Configuration Configuration { get; private set; } = null!;
@@ -176,7 +175,22 @@ public class Plugin : IDalamudPlugin
 
     private void LanguageChanged(string langCode)
     {
-        Language.Culture = new CultureInfo(langCode);
+        // TC quirk: the TC client's Dalamud reports UiLanguage "tw" — but "tw" is the
+        // ISO 639-1 code for Twi, so new CultureInfo("tw") resolves to a culture with no
+        // satellite assembly and every lookup silently falls back to English.
+        // Map all Chinese/Taiwan language codes onto the zh satellite (Traditional content).
+        try
+        {
+            Language.Culture = langCode.ToLowerInvariant() switch
+            {
+                "tw" or "zh" or "zh-tw" or "zh-hant" or "zh-cn" or "zh-hans" => new CultureInfo("zh-Hant"),
+                _ => new CultureInfo(langCode),
+            };
+        }
+        catch (CultureNotFoundException)
+        {
+            Language.Culture = CultureInfo.InvariantCulture;
+        }
     }
 
     [Command("/stracker")]
@@ -274,7 +288,7 @@ public class Plugin : IDalamudPlugin
             ChatGui.Print(Utils.SuccessMessage(Language.NotificationsUploadOptOut));
         }
 
-        if (Configuration.IgnoredCharacters.ContainsKey(PlayerState.ContentId))
+        if (Configuration.IgnoredCharacters.ContainsKey(ClientState.LocalContentId))
         {
             if (ShowIgnoredWarning)
             {

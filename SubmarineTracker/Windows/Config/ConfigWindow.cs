@@ -7,7 +7,7 @@ public partial class ConfigWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public ConfigWindow(Plugin plugin) : base("Configuration##SubmarineTracker")
+    public ConfigWindow(Plugin plugin) : base($"{Language.WindowTitleConfiguration}##SubmarineTracker")
     {
         SizeConstraints = new WindowSizeConstraints
         {

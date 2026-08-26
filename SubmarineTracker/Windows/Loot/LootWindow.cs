@@ -1,6 +1,7 @@
 using System.Globalization;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using SubmarineTracker.Resources;
 
 namespace SubmarineTracker.Windows.Loot;
 
@@ -11,7 +12,7 @@ public partial class LootWindow : Window, IDisposable
     private string Format = string.Empty;
     private static readonly Vector2 IconSize = new(28, 28);
 
-    public LootWindow(Plugin plugin) : base("Custom Loot Overview##SubmarineTracker")
+    public LootWindow(Plugin plugin) : base($"{Language.WindowTitleCustomLoot}##SubmarineTracker")
     {
         this.SizeConstraints = new WindowSizeConstraints
         {

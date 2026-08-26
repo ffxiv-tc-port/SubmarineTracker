@@ -149,7 +149,7 @@ public partial class HelpyWindow
                                 .ToArray();
 
         ImGui.AlignTextToFramePadding();
-        Helper.TextColored(ImGuiColors.ParsedOrange, "FC:");
+        Helper.TextColored(ImGuiColors.ParsedOrange, Language.TermsFC);
         ImGui.SameLine();
         Helper.DrawComboWithArrows("##fcSelection", ref FcSelection, ref existingFCs);
     }
