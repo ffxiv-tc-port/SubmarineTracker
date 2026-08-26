@@ -1510,4 +1510,23 @@ in '#you-dont-pay-my-sub'.</value>
     <data name="WindowTitleUnlockOverlay" xml:space="preserve">
         <value>Unlock Overlay</value>
     </data>
+    <data name="CommandHelp_stracker" xml:space="preserve">
+        <value>Opens the tracker</value>
+    </data>
+    <data name="CommandHelp_sbuilder" xml:space="preserve">
+        <value>Opens the builder</value>
+    </data>
+    <data name="CommandHelp_sloot" xml:space="preserve">
+        <value>Opens the custom loot overview
+/sloot copy - Export loot history to clipboard in CSV format using current settings</value>
+    </data>
+    <data name="CommandHelp_shelpy" xml:space="preserve">
+        <value>Opens the helper window with lots of helpful information</value>
+    </data>
+    <data name="CommandHelp_sconf" xml:space="preserve">
+        <value>Opens the config</value>
+    </data>
+    <data name="CommandHelp_soverlay" xml:space="preserve">
+        <value>Opens the overlay</value>
+    </data>
 </root>
