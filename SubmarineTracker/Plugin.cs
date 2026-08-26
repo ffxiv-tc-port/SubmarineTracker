@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+// API13 的 ISigScanner 在 Dalamud.Game；API15 把它移到 Dalamud.Plugin.Services，
+// 所以上游拿掉了這行 using。合併時會被一併刪掉，這裡要留著。
 using Dalamud.Game;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.ImGuiNotification;

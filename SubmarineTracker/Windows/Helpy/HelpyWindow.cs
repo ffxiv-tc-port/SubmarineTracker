@@ -9,13 +9,14 @@ public partial class HelpyWindow : Window, IDisposable
 
     public HelpyWindow(Plugin plugin) : base($"{Language.WindowNameHelpy}##SubmarineTracker")
     {
-        this.SizeConstraints = new WindowSizeConstraints
+        SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(720, 520),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
         Plugin = plugin;
+        RespectCloseHotkey = !Plugin.Configuration.PreventEscapeClosing;
 
         InitProgression();
     }
