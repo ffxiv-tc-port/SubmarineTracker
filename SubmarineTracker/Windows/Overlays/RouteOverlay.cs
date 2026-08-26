@@ -90,6 +90,8 @@ public class RouteOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         PushedColor = ImRaii.PushColor(ImGuiCol.WindowBg, Helper.TransparentBackground);
     }
 
@@ -247,5 +249,7 @@ public class RouteOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 }

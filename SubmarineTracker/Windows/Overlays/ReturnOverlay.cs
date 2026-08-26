@@ -81,6 +81,8 @@ public class ReturnOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         var returnText = "";
         if (Plugin.Configuration.OverlayTitleTime)
         {
@@ -222,6 +224,8 @@ public class ReturnOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 
     public static void SetHeaderText(Submarine sub, float windowWidth, float lastY)
