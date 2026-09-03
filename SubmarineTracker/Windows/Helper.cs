@@ -229,7 +229,7 @@ public static class Helper
         if (hovered)
             Tooltip(string.Format(Language.HelperIconFailed, iconId));
 
-        // 使用者跑 LogLevel 2，所以走 Information；每個圖示 ID 只報一次。
+        // 使用者跑 LogLevel 1，所以走 Information；每個圖示 ID 只報一次。
         if (ReportedFailedIcons.Add(iconId))
             Plugin.Log.Information($"Failed to load game icon {iconId}: {exception.Message}");
     }
