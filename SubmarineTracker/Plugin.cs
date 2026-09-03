@@ -73,6 +73,7 @@ public class Plugin : IDalamudPlugin
 
     public static DatabaseCache DatabaseCache = null!;
     public readonly Notify Notify;
+    public readonly TrayNotify TrayNotify;
     public readonly NameConverter NameConverter;
     public static HookManager HookManager = null!;
     public static AllaganToolsConsumer AllaganToolsConsumer = null!;
@@ -92,6 +93,7 @@ public class Plugin : IDalamudPlugin
         DatabaseCache = new DatabaseCache();
 
         NameConverter = new NameConverter();
+        TrayNotify = new TrayNotify();
         Notify = new Notify(this);
 
         HookManager = new HookManager();

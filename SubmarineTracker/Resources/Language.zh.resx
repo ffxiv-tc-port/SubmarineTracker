@@ -1542,4 +1542,10 @@
     <data name="HelperIconFailed" xml:space="preserve">
         <value>圖示 {0} 無法從遊戲資料載入。</value>
     </data>
+    <data name="ConfigTabCheckboxTrayNotification" xml:space="preserve">
+        <value>Windows 系統通知</value>
+    </data>
+    <data name="ConfigTabTooltipTrayNotification" xml:space="preserve">
+        <value>潛水艇返回時發出 Windows 系統通知並閃爍工作列圖示，只在遊戲視窗不在前景時才會觸發。系統通知需要安裝 NotificationMaster 外掛；未安裝時只會閃爍工作列圖示。</value>
+    </data>
 </root>

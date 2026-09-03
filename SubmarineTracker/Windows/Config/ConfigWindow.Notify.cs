@@ -29,6 +29,12 @@ public partial class ConfigWindow
 
         }
         changed |= ImGui.Checkbox(Language.ConfigTabCheckboxReturningSub, ref Plugin.Configuration.NotifyForReturns);
+        if (Plugin.Configuration.NotifyForReturns)
+        {
+            using var indent = ImRaii.PushIndent(10.0f);
+            changed |= ImGui.Checkbox(Language.ConfigTabCheckboxTrayNotification, ref Plugin.Configuration.TrayNotification);
+            ImGuiComponents.HelpMarker(Language.ConfigTabTooltipTrayNotification);
+        }
         changed |= ImGui.Checkbox(Language.ConfigTabCheckboxNeededRepair, ref Plugin.Configuration.NotifyForRepairs);
         if (Plugin.Configuration.NotifyForRepairs)
         {

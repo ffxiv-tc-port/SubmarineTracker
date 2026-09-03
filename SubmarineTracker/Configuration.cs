@@ -53,6 +53,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowRepairToast = true;
     public bool ShowStorageMessage = true;
     public bool ShowStorageAtStartup = false;
+    public bool TrayNotification = false;
 
     public bool WebhookOfflineMode = false;
     public bool WebhookDispatch = true;

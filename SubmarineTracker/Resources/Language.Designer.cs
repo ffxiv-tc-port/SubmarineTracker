@@ -1412,6 +1412,24 @@ namespace SubmarineTracker.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Windows Notification.
+        /// </summary>
+        internal static string ConfigTabCheckboxTrayNotification {
+            get {
+                return ResourceManager.GetString("ConfigTabCheckboxTrayNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raises a Windows tray notification and flashes the taskbar icon when a submarine returns, but only while the game window is in the background. The tray notification is provided by the NotificationMaster plugin; without it only the taskbar icon flashes..
+        /// </summary>
+        internal static string ConfigTabTooltipTrayNotification {
+            get {
+                return ResourceManager.GetString("ConfigTabTooltipTrayNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Unlock Overlay.
         /// </summary>
         internal static string ConfigTabCheckboxUnlockOverlay {

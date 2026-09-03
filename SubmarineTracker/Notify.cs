@@ -172,7 +172,13 @@ public class Notify
 
     public void SendReturn(Submarine sub, FreeCompany fc)
     {
-        Plugin.ChatGui.Print(GenerateMessage(Plugin.NameConverter.GetSub(sub, fc)));
+        var name = Plugin.NameConverter.GetSub(sub, fc);
+        Plugin.ChatGui.Print(GenerateMessage(name));
+
+        // Same sentence the chat line just printed, but handed to Windows so it is visible
+        // while the player is looking at another window. TrayNotify decides for itself
+        // whether to act: it is off by default and stays quiet while the game has focus.
+        Plugin.TrayNotify.Notify(Language.NotificationChatReturn.Format(name));
 
         if (Plugin.Configuration.OverlayAlwaysOpen)
             Plugin.ReturnOverlay.IsOpen = true;
