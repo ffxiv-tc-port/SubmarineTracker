@@ -60,6 +60,24 @@ namespace SubmarineTracker.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Icon is still loading ....
+        /// </summary>
+        internal static string HelperIconLoading {
+            get {
+                return ResourceManager.GetString("HelperIconLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Icon {0} could not be loaded from the game data..
+        /// </summary>
+        internal static string HelperIconFailed {
+            get {
+                return ResourceManager.GetString("HelperIconFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Calculate.
         /// </summary>
         internal static string BestEXPCalculationCalculate {

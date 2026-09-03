@@ -190,17 +190,48 @@ public static class Helper
         return changed;
     }
 
+    // 已回報過「載入真的失敗」的圖示 ID。DrawScaledIcon 在每一幀的每一列都會跑，
+    // 沒有這層節流會把 log 洗爆；只在繪製執行緒被存取，所以不需要鎖。
+    private static readonly HashSet<uint> ReportedFailedIcons = [];
+
     public static void DrawScaledIcon(uint iconId, Vector2 iconSize)
     {
         iconSize *= ImGuiHelpers.GlobalScale;
-        var texture = Plugin.Texture.GetFromGameIcon(iconId).GetWrapOrDefault();
-        if (texture == null)
+
+        // GetWrapOrDefault() 回 null 有兩種完全不同的成因：材質還在非同步載入（正常，
+        // 下一幀就會有），以及載入真的失敗。只有 TryGetWrap 的 exception 參數分得出來；
+        // 舊碼把兩者都畫成「Unknown icon」，等於把「還沒載完」謊報成「找不到」。
+        if (Plugin.Texture.GetFromGameIcon(iconId).TryGetWrap(out var texture, out var exception))
         {
-            ImGui.TextUnformatted($"Unknown icon {iconId}");
+            ImGui.Image(texture.Handle, iconSize);
             return;
         }
 
-        ImGui.Image(texture.Handle, iconSize);
+        // 兩種情況都佔掉與圖示相同的版面，避免載入完成前後整列跳動。
+        var topLeft = ImGui.GetCursorScreenPos();
+        ImGui.Dummy(iconSize);
+        var hovered = ImGui.IsItemHovered();
+
+        if (exception == null)
+        {
+            // 還在載入：留白就是誠實的表示，不畫錯誤文字，也不寫 log。
+            if (hovered)
+                Tooltip(Language.HelperIconLoading);
+
+            return;
+        }
+
+        // 真的取不到：列上要看得見「這裡有東西但不知道是什麼」，原因放 tooltip。
+        const string marker = "?";
+        var markerSize = ImGui.CalcTextSize(marker);
+        ImGui.GetWindowDrawList().AddText(topLeft + ((iconSize - markerSize) * 0.5f), ImGui.GetColorU32(ImGuiCol.TextDisabled), marker);
+
+        if (hovered)
+            Tooltip(string.Format(Language.HelperIconFailed, iconId));
+
+        // 使用者跑 LogLevel 2，所以走 Information；每個圖示 ID 只報一次。
+        if (ReportedFailedIcons.Add(iconId))
+            Plugin.Log.Information($"Failed to load game icon {iconId}: {exception.Message}");
     }
 
     public static bool Button(string id, FontAwesomeIcon icon, bool disabled = false)

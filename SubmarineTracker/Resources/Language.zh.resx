@@ -1536,4 +1536,10 @@
 請到設定中調整更高等級的建議路線。
 設定 → 建造 → 最高等級</value>
     </data>
+    <data name="HelperIconLoading" xml:space="preserve">
+        <value>圖示載入中……</value>
+    </data>
+    <data name="HelperIconFailed" xml:space="preserve">
+        <value>圖示 {0} 無法從遊戲資料載入。</value>
+    </data>
 </root>

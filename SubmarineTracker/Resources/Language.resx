@@ -1533,4 +1533,10 @@ in '#you-dont-pay-my-sub'.</value>
     <data name="ConfigTabCheckboxPreventEscape" xml:space="preserve">
         <value>Prevent ESC Closing Windows</value>
     </data>
+    <data name="HelperIconLoading" xml:space="preserve">
+        <value>Icon is still loading ...</value>
+    </data>
+    <data name="HelperIconFailed" xml:space="preserve">
+        <value>Icon {0} could not be loaded from the game data.</value>
+    </data>
 </root>
