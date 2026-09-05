@@ -91,7 +91,9 @@ public class Configuration : IPluginConfiguration
 
     public bool UploadNotification = true;
     public DateTime UploadNotificationReceived = DateTime.MaxValue;
-    public bool UploadPermission = true;
+    // 預設關閉：上傳潛艇撈寶資料到外部服務（Data/Export.cs 的 https://infi.ovh/api/）
+    // 屬於 opt-in，不應該是出貨預設。要開請在設定視窗自行勾選。
+    public bool UploadPermission = false;
 
     public Dictionary<ulong, string> IgnoredCharacters = new();
 
