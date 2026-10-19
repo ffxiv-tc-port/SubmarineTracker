@@ -169,8 +169,15 @@ public static class Utils
 
     public static int GetUniqueHash(uint[] obj)
     {
+        // Same hash as hashing the ascending order, sorted in a copy on the stack: OrderBy cost ~350 B per call
+        // and the loader hashes every precomputed route. The input array is left untouched.
+        ArgumentNullException.ThrowIfNull(obj);
+        Span<uint> sorted = obj.Length <= 64 ? stackalloc uint[obj.Length] : new uint[obj.Length];
+        obj.CopyTo(sorted);
+        sorted.Sort();
+
         var hash = 19;
-        foreach (var element in obj.OrderBy(x => x))
+        foreach (var element in sorted)
             hash = (hash * 31) + element.GetHashCode();
 
         return hash;

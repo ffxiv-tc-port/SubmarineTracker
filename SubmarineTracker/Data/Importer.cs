@@ -56,7 +56,7 @@ public static class Importer
         HashedRoutes.Clear();
         foreach (var (map, routes) in CalculatedData.Maps)
         {
-            var dict = new Dictionary<int, Route>();
+            var dict = new Dictionary<int, Route>(routes.Length);
             foreach (var route in routes)
                 dict.Add(Utils.GetUniqueHash(route.Sectors), route);
 

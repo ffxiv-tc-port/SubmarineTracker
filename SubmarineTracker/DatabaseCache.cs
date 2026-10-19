@@ -29,15 +29,22 @@ public class DatabaseCache : IDisposable
 
     private long LootCounter = -1;
 
+    // Change token taken just before the read that produced the cached array/dictionary; published
+    // together with it under ReadAtLock. null = unknown, so the next timed check reads again.
+    private readonly object ReadAtLock = new();
+    private ChangeToken? SubsReadAt;
+    private ChangeToken? FCReadAt;
+
     public bool NewData;
     public bool FCNeedsRefresh;
     public bool SubsNeedRefresh;
 
     public DatabaseCache()
     {
+        var token = TryGetChangeToken();
         RefreshLoot();
-        RefreshSubmarines();
-        RefreshFreeCompanies();
+        RefreshSubmarines(token);
+        RefreshFreeCompanies(token);
 
         FCRefresh = Environment.TickCount64;
         SubRefresh = Environment.TickCount64;
@@ -123,7 +130,7 @@ public class DatabaseCache : IDisposable
         {
             LootCounter = Database.GetCounter("Loot");
 
-            var result = Database.GetLoot().ToArray();
+            var result = Database.GetLoot();
 
             var allDict = new Dictionary<ulong, Dictionary<uint, Dictionary<Item, int>>>();
             foreach (var point in Voyage.PossiblePoints)
@@ -174,25 +181,57 @@ public class DatabaseCache : IDisposable
         }
     }
 
+    // A failed token read counts as "changed": that check then reads exactly as it did before tokens.
+    private ChangeToken? TryGetChangeToken()
+    {
+        try
+        {
+            return Database.GetChangeToken();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Debug(ex, "Unable to read the database change token");
+            return null;
+        }
+    }
+
+    private bool AlreadyRead(ChangeToken? token, ref ChangeToken? readAt)
+    {
+        lock (ReadAtLock)
+            return token != null && token == readAt;
+    }
+
     private void CheckSubmarines()
     {
         if (SubsNeedRefresh || SubRefresh < Environment.TickCount64)
         {
             SubRefresh = Environment.TickCount64 + ShortDelay;
+            var forced = SubsNeedRefresh;
             SubsNeedRefresh = false;
 
-            Task.Run(RefreshSubmarines);
+            var token = TryGetChangeToken();
+            if (!forced && AlreadyRead(token, ref SubsReadAt))
+                return;
+
+            QueueSubmarineRefresh(token);
         }
     }
 
-    private void RefreshSubmarines()
+    // Own method so the closure is only allocated when a read is actually queued.
+    private void QueueSubmarineRefresh(ChangeToken? token) => Task.Run(() => RefreshSubmarines(token));
+
+    private void RefreshSubmarines(ChangeToken? token)
     {
         try
         {
-            var result = Database.GetSubmarines().ToArray();
+            var result = Database.GetSubmarines();
 
             Thread.MemoryBarrier();
-            Submarines = result;
+            lock (ReadAtLock)
+            {
+                Submarines = result;
+                SubsReadAt = token;
+            }
         }
         catch (Exception ex)
         {
@@ -206,12 +245,19 @@ public class DatabaseCache : IDisposable
             return;
 
         FCRefresh = Environment.TickCount64 + ShortDelay;
+        var forced = FCNeedsRefresh;
         FCNeedsRefresh = false;
 
-        Task.Run(RefreshFreeCompanies);
+        var token = TryGetChangeToken();
+        if (!forced && AlreadyRead(token, ref FCReadAt))
+            return;
+
+        QueueFreeCompanyRefresh(token);
     }
 
-    private void RefreshFreeCompanies()
+    private void QueueFreeCompanyRefresh(ChangeToken? token) => Task.Run(() => RefreshFreeCompanies(token));
+
+    private void RefreshFreeCompanies(ChangeToken? token)
     {
         try
         {
@@ -221,7 +267,11 @@ public class DatabaseCache : IDisposable
             NewData = result.Count != FreeCompanies.Count;
 
             Thread.MemoryBarrier();
-            FreeCompanies = result;
+            lock (ReadAtLock)
+            {
+                FreeCompanies = result;
+                FCReadAt = token;
+            }
         }
         catch (Exception ex)
         {
@@ -369,9 +419,16 @@ public record Submarine
         var lowest = 30000;
         foreach (var (part, durability) in PartConditions)
         {
+            // PartConditions 與 Points 都是從 SQLite 回讀的持久化值，id 不保證存在於本地
+            // 資料表；裸 GetRow 查不到就擲例外，而這個方法在主視窗與返航疊加層的 Draw
+            // 路徑上。查不到的零件／海域直接略過，寧可預測值偏樂觀也不要讓視窗只剩錯誤訊息。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             int damaged = durability;
             foreach (var sector in Points)
-                damaged -= (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged -= (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (lowest > damaged)
                 lowest = damaged;
@@ -402,9 +459,14 @@ public record Submarine
         var highestDamage = 1;
         foreach (var (part, _) in PartConditions)
         {
+            // 同 PredictDurability：持久化的零件／海域 id 查不到就略過，不要擲例外。
+            if (!Sheets.PartSheet.TryGetRow(part, out var partRow))
+                continue;
+
             var damaged = 0;
             foreach (var sector in Points)
-                damaged += (335 + Sheets.ExplorationSheet.GetRow(sector).RankReq - Sheets.PartSheet.GetRow(part).Rank) * 7;
+                if (Sheets.ExplorationSheet.TryGetRow(sector, out var sectorRow))
+                    damaged += (335 + sectorRow.RankReq - partRow.Rank) * 7;
 
             if (highestDamage < damaged)
                 highestDamage = damaged;
@@ -415,7 +477,12 @@ public record Submarine
 
     public (uint Rank, double Exp) PredictExpGrowth()
     {
-        var currentRank = Sheets.RankSheet.GetRow(Rank);
+        // Rank 是從 SQLite 回讀的持久化值，不保證存在於本地的 SubmarineRank 表；
+        // 裸 GetRow 查不到就擲例外，而這個方法在 Draw 路徑上。
+        // 查不到時回既有的「新潛艇、尚無航程」那個回傳形狀。
+        if (!Sheets.RankSheet.TryGetRow(Rank, out var currentRank))
+            return (Rank, 0.0);
+
         var leftover = CExp + Sectors.CalculateExpForSectors(Voyage.ToExplorationArray(Points), Build);
 
         // This happens whenever the user has a new sub with no voyage
@@ -429,8 +496,13 @@ public record Submarine
 
             if (leftover > currentRank.ExpToNext)
             {
+                // 持久化的 Rank 若已超過 LastRank，上面那個 == 比較永遠不會成立，
+                // RowId + 1 會一路走出表尾。先驗再扣，讓 leftover 與 currentRank 保持一致。
+                if (!Sheets.RankSheet.TryGetRow(currentRank.RowId + 1, out var nextRank))
+                    break;
+
                 leftover -= currentRank.ExpToNext;
-                currentRank = Sheets.RankSheet.GetRow(currentRank.RowId + 1);
+                currentRank = nextRank;
             }
             else
             {

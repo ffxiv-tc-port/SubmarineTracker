@@ -30,7 +30,11 @@ public partial class ConfigWindow
                 ImGuiComponents.HelpMarker(Language.ConfigTabTooltipUnlockOverlay);
                 changed |= ImGui.Checkbox(Language.ConfigTabCheckboxRouteOverlay, ref Plugin.Configuration.ShowRouteOverlay);
                 ImGuiComponents.HelpMarker(Language.ConfigTabTooltipRouteOverlay);
-                changed |= ImGui.SliderInt(Language.ConfigTabSliderRank, ref Plugin.Configuration.HighestLevel, 1, (int)Sheets.LastRank, $"{Language.TermsRank} %d");
+                // 這裡的 changed 最後會通往 Configuration.Save()。滑桿在拖曳中每畫格都可能
+                // 回傳 true，直接 |= 進去會以幀率同步寫磁碟；改成只在放開滑鼠時計一次。
+                // HighestLevel 本身仍是即時更新，畫面不受影響。
+                ImGui.SliderInt(Language.ConfigTabSliderRank, ref Plugin.Configuration.HighestLevel, 1, (int)Sheets.LastRank, $"{Language.TermsRank} %d");
+                changed |= ImGui.IsItemDeactivatedAfterEdit();
                 ImGuiComponents.HelpMarker(Language.ConfigTabTooltipRank);
                 changed |= ImGui.Checkbox(Language.ConfigTabCheckboxIncludeMain, ref Plugin.Configuration.MainRouteAutoInclude);
                 ImGuiComponents.HelpMarker(Language.ConfigTabTooltipIncludeMain);

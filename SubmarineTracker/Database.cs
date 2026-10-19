@@ -38,13 +38,12 @@ public class Database : IDisposable
         }
     }
 
+    // Close() releases the file only when every command and reader made on Connection has been
+    // disposed; one left to its finalizer keeps the file open until the next GC gets to it.
     public void Dispose()
     {
         Connection.Close();
         Connection.Dispose();
-        // Closing the connection doesn't immediately release the file.
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
     }
 
     public static string DatabasePath()
@@ -75,7 +74,7 @@ public class Database : IDisposable
     private void Migrate()
     {
         // Get current user_version.
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         cmd.CommandText = "PRAGMA user_version;";
         var userVersion = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -176,11 +175,15 @@ public class Database : IDisposable
             -- Migration 1: Add Counters Table
         ");
 
-        var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='counters';";
-        var reader = cmd.ExecuteReader();
-        reader.Close();
-        if (cmd.ExecuteReader().HasRows)
+        bool counterTableExists;
+        using (var cmd = Connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='counters';";
+            using var reader = cmd.ExecuteReader();
+            counterTableExists = reader.HasRows;
+        }
+
+        if (counterTableExists)
         {
             Plugin.Log.Error("Counters table already exists, corrupted database?");
             SetMigrationVersion(1);
@@ -212,7 +215,7 @@ public class Database : IDisposable
 
     private void SetMigrationVersion(int version)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         // Parameters aren't supported for PRAGMA queries, and you can't set the
         // version with a pragma_ function.
         cmd.CommandText = $"PRAGMA user_version = {version};";
@@ -234,7 +237,7 @@ public class Database : IDisposable
 
     internal void InsertLootEntry(Loot loot)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO loot (
                               FreeCompanyId,
@@ -313,7 +316,7 @@ public class Database : IDisposable
 
     internal void UpsertSubmarine(Submarine sub)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO submarine (
                               FreeCompanyId,
@@ -392,7 +395,7 @@ public class Database : IDisposable
 
     internal void UpsertFreeCompany(FreeCompany fc)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO freecompany (
                               FreeCompanyId,
@@ -429,39 +432,42 @@ public class Database : IDisposable
         cmd.ExecuteNonQuery();
     }
 
-    internal LootReader GetLoot()
+    internal Loot[] GetLoot()
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM loot";
         cmd.CommandTimeout = 120;
 
-        return new LootReader(cmd.ExecuteReader());
+        using var reader = cmd.ExecuteReader();
+        return new LootReader(reader).ToArray();
     }
 
-    internal SubmarineReader GetSubmarines()
+    internal Submarine[] GetSubmarines()
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM submarine";
         cmd.CommandTimeout = 120;
 
-        return new SubmarineReader(cmd.ExecuteReader());
+        using var reader = cmd.ExecuteReader();
+        return new SubmarineReader(reader).ToArray();
     }
 
-    internal FCReader GetFreeCompanies()
+    internal FreeCompany[] GetFreeCompanies()
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM freecompany";
         cmd.CommandTimeout = 120;
 
-        return new FCReader(cmd.ExecuteReader());
+        using var reader = cmd.ExecuteReader();
+        return new FCReader(reader).ToArray();
     }
 
     internal long GetCounter(string counter)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
 
         cmd.CommandText = $"SELECT (count) FROM counters WHERE Key = '{counter}'";
         cmd.CommandTimeout = 120;
@@ -469,9 +475,26 @@ public class Database : IDisposable
         return (long) (cmd.ExecuteScalar() ?? -1);
     }
 
+    /// <summary>
+    /// Moves whenever stored rows may have changed: data_version on a commit by any other connection
+    /// (another game client sharing this file), total_changes() on any row this connection wrote,
+    /// whichever method or thread wrote it.
+    /// </summary>
+    internal ChangeToken GetChangeToken()
+    {
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = "SELECT data_version, total_changes() FROM pragma_data_version";
+
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read())
+            throw new InvalidOperationException("pragma_data_version returned no row");
+
+        return new ChangeToken(reader.GetInt64(0), reader.GetInt64(1));
+    }
+
     internal bool DeleteFreeCompany(ulong fcId)
     {
-        var cmd = Connection.CreateCommand();
+        using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           DELETE FROM loot
                           WHERE FreeCompanyId = $FreeCompanyId;
@@ -487,6 +510,8 @@ public class Database : IDisposable
         return cmd.ExecuteNonQuery() > 0;
     }
 }
+
+internal readonly record struct ChangeToken(long DataVersion, long TotalChanges);
 
 internal class LootReader(DbDataReader reader) : IEnumerable<Loot>
 {

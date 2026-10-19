@@ -25,6 +25,10 @@ public partial class HelpyWindow
 
         foreach (var (key, fc) in Plugin.DatabaseCache.GetFreeCompanies())
         {
+            // 快取只在第一次用到與手動同步時重建；之後才記錄到的部隊不在裡面，同步前先略過。
+            if (!Storage.StorageCache.TryGetValue(key, out var cachedItems))
+                continue;
+
             Helper.TextColored(ImGuiColors.DalamudViolet, $"{Plugin.NameConverter.GetName(fc)}:");
 
             using var indent = ImRaii.PushIndent(10.0f);
@@ -36,7 +40,7 @@ public partial class HelpyWindow
             ImGui.TableSetupColumn("##count", ImGuiTableColumnFlags.WidthStretch, 0.15f);
             ImGui.TableSetupColumn("##item");
 
-            foreach (var cached in Storage.StorageCache[key].Values)
+            foreach (var cached in cachedItems.Values)
             {
                 ImGui.TableNextColumn();
                 Helper.DrawScaledIcon(cached.Item.Icon, IconSize);

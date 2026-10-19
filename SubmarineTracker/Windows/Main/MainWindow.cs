@@ -11,7 +11,7 @@ public partial class MainWindow : Window, IDisposable
     private static readonly Vector2 IconSize = new(28, 28);
     private static readonly int MaxLength = "Heavens' Eye Materia III".Length;
 
-    public MainWindow(Plugin plugin) : base("Tracker##SubmarineTracker")
+    public MainWindow(Plugin plugin) : base($"{Language.WindowNameTracker}##SubmarineTracker")
     {
         Plugin = plugin;
         RespectCloseHotkey = !Plugin.Configuration.PreventEscapeClosing;
@@ -67,7 +67,7 @@ public partial class MainWindow : Window, IDisposable
                     {
                         if (!(Plugin.Configuration.ShowAll && CurrentSelection == 1))
                             if (!Plugin.DatabaseCache.GetFreeCompanies().ContainsKey(CurrentSelection))
-                                CurrentSelection = Plugin.GetFCOrderWithoutHidden().First();
+                                CurrentSelection = Plugin.GetFCOrderWithoutHidden().FirstOrDefault(); // 部隊全被隱藏時是 0，Overview 不畫
 
                         var current = CurrentSelection;
                         if (Plugin.Configuration.ShowAll)

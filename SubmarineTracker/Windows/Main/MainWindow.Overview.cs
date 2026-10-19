@@ -7,7 +7,10 @@ public partial class MainWindow
 {
     private void Overview()
     {
-        var selectedFc = Plugin.DatabaseCache.GetFreeCompanies()[CurrentSelection];
+        // 沒有可選的部隊（全部被隱藏）時 CurrentSelection 是 0：不畫。
+        if (!Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(CurrentSelection, out var selectedFc))
+            return;
+
         using var tabBar = ImRaii.TabBar("##fcSubmarineDetail");
         if (!tabBar.Success)
             return;
@@ -63,7 +66,7 @@ public partial class MainWindow
                         var time = "";
                         if (Plugin.Configuration.ShowTimeInOverview)
                         {
-                            time = " Done ";
+                            time = $" {Language.TermsDone} ";
 
                             var returnTime = sub.ReturnTime - DateTime.Now.ToUniversalTime();
                             if (returnTime.TotalSeconds > 0)

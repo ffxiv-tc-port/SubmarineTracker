@@ -15,7 +15,7 @@ public partial class BuilderWindow : Window, IDisposable
 
     private string CurrentInput = "";
 
-    public BuilderWindow(Plugin plugin) : base("Builder##SubmarineTracker")
+    public BuilderWindow(Plugin plugin) : base($"{Language.WindowNameBuilder}##SubmarineTracker")
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -54,6 +54,8 @@ public partial class BuilderWindow : Window, IDisposable
                     shipTabOpen |= ShipTab();
 
                     shipTabOpen |= LevelingTab();
+
+                    shipTabOpen |= AvailablePartsTab();
 
                     shipTabOpen |= LootTab();
 

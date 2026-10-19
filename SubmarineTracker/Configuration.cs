@@ -41,6 +41,12 @@ public class Configuration : IPluginConfiguration
     public bool ShowUnlockOverlay = true;
     public bool MainRouteAutoInclude = true;
 
+    // 索引＝SubmarinePart 列號 - 1；只有勾了「只用可用部件」的求解器才看它。
+    public bool[] AvailableShipParts = Enumerable.Repeat(true, PartPool.Count).ToArray();
+    public bool RestrictShipSolverParts = false;
+    public bool RestrictLevelingSolverParts = false;
+    public LevelingObjective LevelingObjective = LevelingObjective.Default;
+
     public bool CalculateOnInteraction = false;
     public DurationLimit DurationLimit = DurationLimit.None;
     public int CustomHour = 42;
@@ -53,6 +59,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowRepairToast = true;
     public bool ShowStorageMessage = true;
     public bool ShowStorageAtStartup = false;
+    public bool TrayNotification = false;
 
     public bool WebhookOfflineMode = false;
     public bool WebhookDispatch = true;
@@ -74,6 +81,7 @@ public class Configuration : IPluginConfiguration
     public bool OverlayShowRank = false;
     public bool OverlayShowBuild = false;
     public bool OverlayHoldClosed = false;
+    public bool OverlayAutoExpandCollapseFCs = false;
     public bool OverlayTitleTime = false;
     public bool OverlayNoHidden = true;
     public Vector4 OverlayAllDone = Helper.CustomFullyDone;
@@ -90,7 +98,9 @@ public class Configuration : IPluginConfiguration
 
     public bool UploadNotification = true;
     public DateTime UploadNotificationReceived = DateTime.MaxValue;
-    public bool UploadPermission = true;
+    // 預設關閉：上傳潛艇撈寶資料到外部服務（Data/Export.cs 的 https://infi.ovh/api/）
+    // 屬於 opt-in，不應該是出貨預設。要開請在設定視窗自行勾選。
+    public bool UploadPermission = false;
 
     public Dictionary<ulong, string> IgnoredCharacters = new();
 

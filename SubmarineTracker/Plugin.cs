@@ -2,6 +2,9 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+// API13 的 ISigScanner 在 Dalamud.Game；API15 把它移到 Dalamud.Plugin.Services，
+// 所以上游拿掉了這行 using。合併時會被一併刪掉，這裡要留著。
+using Dalamud.Game;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Windowing;
@@ -40,8 +43,8 @@ public class Plugin : IDalamudPlugin
     [PluginService] public static IPluginLog Log { get; private set; } = null!;
     [PluginService] public static INotificationManager Notification { get; private set; } = null!;
     [PluginService] public static IDtrBar DtrBar { get; private set; } = null!;
-    [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] public static IObjectTable ObjectTable { get; private set; } = null!;
+    [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
 
     public static Configuration Configuration { get; private set; } = null!;
     public static FileDialogManager FileDialogManager { get; private set; } = null!;
@@ -70,9 +73,11 @@ public class Plugin : IDalamudPlugin
 
     public static DatabaseCache DatabaseCache = null!;
     public readonly Notify Notify;
+    public readonly TrayNotify TrayNotify;
     public readonly NameConverter NameConverter;
     public static HookManager HookManager = null!;
     public static AllaganToolsConsumer AllaganToolsConsumer = null!;
+    private readonly IpcProvider IpcProvider;
 
     private bool ShowIgnoredWarning = true;
     private bool ShowStorageMessage = true;
@@ -89,10 +94,12 @@ public class Plugin : IDalamudPlugin
         DatabaseCache = new DatabaseCache();
 
         NameConverter = new NameConverter();
+        TrayNotify = new TrayNotify();
         Notify = new Notify(this);
 
         HookManager = new HookManager();
         AllaganToolsConsumer = new AllaganToolsConsumer();
+        IpcProvider = new IpcProvider();
 
         ConfigWindow = new ConfigWindow(this);
         MainWindow = new MainWindow(this);
@@ -139,13 +146,11 @@ public class Plugin : IDalamudPlugin
         var subDone = DatabaseCache.GetSubmarines().Any(s => s.IsDone());
         if (Configuration.OverlayOpen || (Configuration.OverlayStartUp && subDone))
             ReturnOverlay.IsOpen = true;
-
-        // Trigger Importer to precalculate hashes
-        Log.Debug($"Loading: {Importer.Filename}");
     }
 
     public void Dispose()
     {
+        IpcProvider.Dispose();
         DatabaseCache.Dispose();
 
         WindowSystem.RemoveAllWindows();
@@ -175,7 +180,22 @@ public class Plugin : IDalamudPlugin
 
     private void LanguageChanged(string langCode)
     {
-        Language.Culture = new CultureInfo(langCode);
+        // TC quirk: the TC client's Dalamud reports UiLanguage "tw" — but "tw" is the
+        // ISO 639-1 code for Twi, so new CultureInfo("tw") resolves to a culture with no
+        // satellite assembly and every lookup silently falls back to English.
+        // Map all Chinese/Taiwan language codes onto the zh satellite (Traditional content).
+        try
+        {
+            Language.Culture = langCode.ToLowerInvariant() switch
+            {
+                "tw" or "zh" or "zh-tw" or "zh-hant" or "zh-cn" or "zh-hans" => new CultureInfo("zh-Hant"),
+                _ => new CultureInfo(langCode),
+            };
+        }
+        catch (CultureNotFoundException)
+        {
+            Language.Culture = CultureInfo.InvariantCulture;
+        }
     }
 
     [Command("/stracker")]
@@ -233,6 +253,10 @@ public class Plugin : IDalamudPlugin
 
     private bool IsUpserting;
     private bool NeedsRefresh => IsUpserting || DatabaseCache.FCNeedsRefresh || DatabaseCache.SubsNeedRefresh;
+
+    private const long WorkshopScanIntervalMs = 500;
+    private long NextWorkshopScan;
+
     private unsafe void FrameworkUpdate(IFramework _)
     {
         // Reload stale data
@@ -296,8 +320,7 @@ public class Plugin : IDalamudPlugin
             ShowStorageMessage = false;
         }
 
-        var workshopData = instance->WorkshopTerritory->Submersible;
-        var submarineData = workshopData.Data.ToArray();
+        ref var workshopData = ref instance->WorkshopTerritory->Submersible;
 
         BuilderWindow.VoyageInterfaceSelection = 0;
         if (Configuration.AutoSelectCurrent)
@@ -311,11 +334,20 @@ public class Plugin : IDalamudPlugin
             }
         }
 
-        var possibleNewSubs = new List<Submarine>();
-        foreach (var (sub, idx) in submarineData.Where(data => data.RankId != 0).WithIndex())
-            possibleNewSubs.Add(new Submarine(sub, idx) {FreeCompanyId = fcId});
+        // Rebuilding the subs allocates on every call; a dispatch, return or repair is a few UI steps
+        // away from the next one, so looking twice a second loses nothing.
+        if (NeedsRefresh || Environment.TickCount64 < NextWorkshopScan)
+            return;
+        NextWorkshopScan = Environment.TickCount64 + WorkshopScanIntervalMs;
 
-        if (NeedsRefresh || possibleNewSubs.Count == 0)
+        // idx is the position among occupied slots; the Submarine constructor reads that sub's parts by it.
+        var possibleNewSubs = new List<Submarine>();
+        var idx = 0;
+        foreach (ref var sub in workshopData.Data)
+            if (sub.RankId != 0)
+                possibleNewSubs.Add(new Submarine(sub, idx++) {FreeCompanyId = fcId});
+
+        if (possibleNewSubs.Count == 0)
             return;
 
         var orgSubs = DatabaseCache.GetSubmarines(fcId).ToList();
@@ -336,31 +368,36 @@ public class Plugin : IDalamudPlugin
             fc.ExploredSectors[submarineExploration.RowId] = HousingManager.IsSubmarineExplorationExplored((byte)submarineExploration.RowId);
         }
 
-        foreach (var sub in submarineData.Where(data => data.RankId != 0 && data.ReturnTime != 0))
-            Notify.CheckForDispatch(sub.RegisterTime, sub.ReturnTime);
+        foreach (ref var sub in workshopData.Data)
+            if (sub.RankId != 0 && sub.ReturnTime != 0)
+                Notify.CheckForDispatch(sub.RegisterTime, sub.ReturnTime);
 
         LoadFCOrder();
         IsUpserting = true;
-        Task.Run(() =>
-        {
-            try
-            {
-                DatabaseCache.Database.UpsertFreeCompany(fc);
-                foreach (var sub in possibleNewSubs)
-                    DatabaseCache.Database.UpsertSubmarine(sub);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error while upsert of fc and submarines");
-            }
-            finally
-            {
-                IsUpserting = false;
-                DatabaseCache.FCNeedsRefresh = true;
-                DatabaseCache.SubsNeedRefresh = true;
-            }
-        });
+        QueueUpsert(fc, possibleNewSubs);
     }
+
+    // A method of its own: a lambda capturing FrameworkUpdate's locals would allocate its closure
+    // at the top of FrameworkUpdate, i.e. on every frame.
+    private void QueueUpsert(FreeCompany fc, List<Submarine> subs) => Task.Run(() =>
+    {
+        try
+        {
+            DatabaseCache.Database.UpsertFreeCompany(fc);
+            foreach (var sub in subs)
+                DatabaseCache.Database.UpsertSubmarine(sub);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while upsert of fc and submarines");
+        }
+        finally
+        {
+            IsUpserting = false;
+            DatabaseCache.FCNeedsRefresh = true;
+            DatabaseCache.SubsNeedRefresh = true;
+        }
+    });
 
     public void Sync()
     {
@@ -419,11 +456,42 @@ public class Plugin : IDalamudPlugin
     public void OpenConfig() => ConfigWindow.Toggle();
     #endregion
 
-    public static unsafe ulong GetFCId => InfoProxyFreeCompany.Instance()->Id;
+    /// <summary>
+    /// 目前部隊的 Id;取不到時回 0。
+    /// </summary>
+    /// <remarks>InfoProxyFreeCompany 走 InfoModule 鏈(UIModule／InfoModule 皆可能為 null,proxy 未註冊時 GetInfoProxyById 也回 null),
+    /// 未登入／登出瞬間裸解參考就是 AccessViolation,而 AVE 在 .NET Core 是 corrupted-state exception,呼叫端的 try/catch 完全攔不到。
+    /// <para>
+    /// 回 0 不是新造的哨兵值:沒有部隊的玩家本來就是 0,而 FrameworkUpdate 本來就有 `if (fcId == 0) return;`。
+    /// 唯讀消費點全都安全退化:TryGetValue／ContainsKey 落空、GetValueOrDefault 回 FakeFC、GetSubmarines(0) 回空陣列;
+    /// 用這個 Id 當鍵的疊加層(Route／Next／Unlock)一律 TryGetValue,落空就不畫。
+    /// ⚠️ 唯一會把這個值寫進資料庫的是 HookManager 的戰利品寫入,那裡另外明確擋掉 0。
+    /// </para>
+    /// </remarks>
+    public static unsafe ulong GetFCId
+    {
+        get
+        {
+            var freeCompany = InfoProxyFreeCompany.Instance();
+            return freeCompany == null ? 0 : freeCompany->Id;
+        }
+    }
 
     public static IEnumerable<ulong> GetFCOrderWithoutHidden()
     {
         return Configuration.ManagedFCs.Where(status => !status.Hidden).Select(status => status.Id);
+    }
+
+    /// <summary>
+    /// 公會在管理清單裡被標成隱藏時為真；不在清單裡算沒隱藏。每幀可呼叫、不配置。
+    /// </summary>
+    public static bool IsFCHidden(ulong id)
+    {
+        foreach (var (fcId, hidden) in Configuration.ManagedFCs)
+            if (fcId == id)
+                return hidden;
+
+        return false;
     }
 
     public static void LoadFCOrder()

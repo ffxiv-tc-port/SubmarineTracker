@@ -53,7 +53,11 @@ public partial class ConfigWindow
             }
 
             if (forbidden && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            {
+                // 還在 ImRaii.Disabled 區段內，不把 Alpha 推回 1 說明框會跟著變淡。
+                using var tooltipAlpha = ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1f);
                 Helper.Tooltip(Language.ConfigTooltipDefaultCollection);
+            }
         }
 
         var selected = Plugin.Configuration.CustomLootProfiles[combo[CurrentCollectionId]];

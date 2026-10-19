@@ -14,9 +14,12 @@ public class NextOverlay : Window, IDisposable
     private readonly List<(uint, Unlocks.UnlockedFrom)> UnlockPath;
     private (uint Sector, Unlocks.UnlockedFrom UnlockedFrom)? NextSector;
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    // 只在數值變動時記一次，避免在繪製路徑上每幀洗版。
+    private uint LastReportedBadSector = uint.MaxValue;
 
-    public NextOverlay(Plugin plugin) : base("Next Overlay##SubmarineTracker")
+    private ImRaii.Color PushedColor = null!;
+
+    public NextOverlay(Plugin plugin) : base($"{Language.WindowTitleNextOverlay}##SubmarineTracker")
     {
         Size = new Vector2(300, 60);
 
@@ -55,7 +58,10 @@ public class NextOverlay : Window, IDisposable
             PositionCondition = ImGuiCond.Always;
 
             NextSector = null;
-            var fcSub = Plugin.DatabaseCache.GetFreeCompanies()[Plugin.GetFCId];
+            // 取不到部隊（GetFCId 回 0）或資料庫還沒有這個部隊：不畫。
+            if (!Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(Plugin.GetFCId, out var fcSub))
+                return;
+
             foreach (var (sector, unlockedFrom) in UnlockPath)
             {
                 fcSub.UnlockedSectors.TryGetValue(sector, out var hasUnlocked);
@@ -79,6 +85,8 @@ public class NextOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         PushedColor = ImRaii.PushColor(ImGuiCol.WindowBg, Helper.TransparentBackground);
     }
 
@@ -89,8 +97,24 @@ public class NextOverlay : Window, IDisposable
 
         var nextSector = NextSector.Value;
 
-        var nextUnlock = Sheets.ExplorationSheet.GetRow(nextSector.Sector);
-        var unlockedFrom = Sheets.ExplorationSheet.GetRow((uint)nextSector.UnlockedFrom.Sector);
+        // UnlockedFrom.Sector 可能是哨兵值（Begin 9000 / UnknownUnlock 9876 / Map 9999）而不是真正的 SubmarineExploration 列
+        // （UnlockPath 反轉後的第一筆就是 (海域 2, Begin)）。PreOpenCheck 的 Voyage.FindMapFromSector() 擋不住它：FindVoyageStart() 對
+        // 任何超出範圍的值都會退回「最大的起始點」，靜默回傳一張合法的地圖而不是拋例外。
+        // GetRow() 在查無此列時擲 ArgumentOutOfRangeException，而這裡位於繪製路徑上：擲了這個視窗就只剩 Dalamud 的錯誤紅字。
+        var fromSector = (uint)nextSector.UnlockedFrom.Sector;
+        if (!Sheets.ExplorationSheet.TryGetRow(nextSector.Sector, out var nextUnlock) ||
+            !Sheets.ExplorationSheet.TryGetRow(fromSector, out var unlockedFrom))
+        {
+            if (LastReportedBadSector != fromSector)
+            {
+                LastReportedBadSector = fromSector;
+                Plugin.Log.Information($"NextOverlay: 查無海域列（目標 {nextSector.Sector}／解鎖來源 {fromSector}），本次不繪製。解鎖來源 >= 9000 代表它是哨兵值而非真實海域。");
+            }
+
+            return;
+        }
+
+        LastReportedBadSector = uint.MaxValue;
         if (unlockedFrom.RankReq > Plugin.BuilderWindow.CurrentBuild.Rank)
         {
             if (ImGui.IsWindowHovered())
@@ -128,5 +152,7 @@ public class NextOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 }

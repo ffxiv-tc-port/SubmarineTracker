@@ -24,9 +24,9 @@ public class RouteOverlay : Window, IDisposable
     public bool Calculate;
     public readonly HashSet<SubmarineExploration> MustInclude = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
-    public RouteOverlay(Plugin plugin) : base("Route Overlay##SubmarineTracker")
+    public RouteOverlay(Plugin plugin) : base($"{Language.WindowTitleRouteOverlay}##SubmarineTracker")
     {
         Size = new Vector2(300, 330);
 
@@ -67,6 +67,13 @@ public class RouteOverlay : Window, IDisposable
             Position = new Vector2(addonPtr.X - (Size!.Value.X * ImGuiHelpers.GlobalScale), addonPtr.Y + 5);
             PositionCondition = ImGuiCond.Always;
 
+            // 取不到部隊（GetFCId 回 0）或資料庫還沒有這個部隊：不開。Map 歸 -1，資料出現後照「換了地圖」重算。
+            if (!Plugin.DatabaseCache.GetFreeCompanies().ContainsKey(Plugin.GetFCId))
+            {
+                Map = -1;
+                return;
+            }
+
             if (agent->MapId != Map)
             {
                 Calculate = true;
@@ -90,6 +97,8 @@ public class RouteOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         PushedColor = ImRaii.PushColor(ImGuiCol.WindowBg, Helper.TransparentBackground);
     }
 
@@ -104,7 +113,10 @@ public class RouteOverlay : Window, IDisposable
             return;
         }
 
-        var fcSub = Plugin.DatabaseCache.GetFreeCompanies()[Plugin.GetFCId];
+        // 繪製路徑上不用索引子：缺鍵會擲例外，這個視窗就只剩錯誤訊息。
+        if (!Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(Plugin.GetFCId, out var fcSub))
+            return;
+
         if (Calculate && !ComputingPath)
         {
             Calculate = false;
@@ -215,7 +227,7 @@ public class RouteOverlay : Window, IDisposable
             Plugin.BuilderWindow.ExplorationPopupOptions = new()
             {
                 FormatRow = e => $"{NumToLetter(e.RowId - startPoint)}. {UpperCaseStr(e.Destination)} ({Language.TermsRank} {e.RankReq})",
-                FilteredSheet = Sheets.ExplorationSheet.Where(r => r.Map.RowId == Plugin.BuilderWindow.CurrentBuild.MapRowId && fcSub.UnlockedSectors[r.RowId] && r.RankReq <= Plugin.BuilderWindow.CurrentBuild.Rank)
+                FilteredSheet = Sheets.ExplorationSheet.Where(r => r.Map.RowId == Plugin.BuilderWindow.CurrentBuild.MapRowId && fcSub.UnlockedSectors.GetValueOrDefault(r.RowId) && r.RankReq <= Plugin.BuilderWindow.CurrentBuild.Rank)
             };
         }
 
@@ -247,5 +259,7 @@ public class RouteOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 }

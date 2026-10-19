@@ -13,9 +13,9 @@ public class UnlockOverlay : Window, IDisposable
 
     private readonly List<(uint, Unlocks.UnlockedFrom)> PossibleUnlocks = [];
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    private ImRaii.Color PushedColor = null!;
 
-    public UnlockOverlay(Plugin plugin) : base("Unlock Overlay##SubmarineTracker")
+    public UnlockOverlay(Plugin plugin) : base($"{Language.WindowTitleUnlockOverlay}##SubmarineTracker")
     {
         Size = OriginalSize;
 
@@ -51,11 +51,18 @@ public class UnlockOverlay : Window, IDisposable
             Position = new Vector2(addonPtr.X - (Size!.Value.X * ImGuiHelpers.GlobalScale), addonPtr.Y + y);
             PositionCondition = ImGuiCond.Always;
 
-            var fcSub = Plugin.DatabaseCache.GetFreeCompanies()[Plugin.GetFCId];
+            // 取不到部隊（GetFCId 回 0）或資料庫還沒有這個部隊：不畫。
+            if (!Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(Plugin.GetFCId, out var fcSub))
+                return;
 
             PossibleUnlocks.Clear();
-            foreach (var sector in Sheets.ExplorationSheet.Where(s => s.Map.RowId == agent->MapId))
+            // 不用 Where(lambda)：捕獲 agent 的閉包會配在方法入口，連不畫的幀也每幀配一個。
+            var mapId = agent->MapId;
+            foreach (var sector in Sheets.ExplorationSheet)
             {
+                if (sector.Map.RowId != mapId)
+                    continue;
+
                 if (!Unlocks.SectorToUnlock.TryGetValue(sector.RowId, out var unlockedFrom))
                     continue;
 
@@ -85,6 +92,8 @@ public class UnlockOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         PushedColor = ImRaii.PushColor(ImGuiCol.WindowBg, Helper.TransparentBackground);
     }
 
@@ -140,5 +149,7 @@ public class UnlockOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 }

@@ -13,7 +13,10 @@ public class ReturnOverlay : Window, IDisposable
     private Submarine NextSub = new();
     private (int OnRoute, int Done) VoyageStats = (0, 0);
 
-    private ImRaii.ColorDisposable PushedColor = null!;
+    // 自動展開／摺疊：每個公會上次看到的狀態（true 全部返回、false 全部出航、null 部分返回），只在狀態改變時動標頭。
+    private readonly Dictionary<ulong, bool?> FcReturnStates = new();
+
+    private ImRaii.Color PushedColor = null!;
 
     public ReturnOverlay(Plugin plugin) : base("Submarines: 0|0###submarineOverlay")
     {
@@ -52,7 +55,7 @@ public class ReturnOverlay : Window, IDisposable
         NextSub = new Submarine(Plugin.Configuration.OverlayFirstReturn ? uint.MaxValue : 0);
         foreach (var sub in Plugin.DatabaseCache.GetSubmarines())
         {
-            if (Plugin.Configuration.OverlayNoHidden && Plugin.Configuration.ManagedFCs.FirstOrDefault(f => f.Id == sub.FreeCompanyId).Hidden)
+            if (Plugin.Configuration.OverlayNoHidden && Plugin.IsFCHidden(sub.FreeCompanyId))
                 continue;
 
             if (sub.IsDone())
@@ -81,13 +84,15 @@ public class ReturnOverlay : Window, IDisposable
 
     public override void PreDraw()
     {
+        base.PreDraw();
+
         var returnText = "";
         if (Plugin.Configuration.OverlayTitleTime)
         {
             if (Plugin.Configuration.OverlayFirstReturn)
             {
                 if (NextSub.Return < uint.MaxValue)
-                    returnText = $"   -   {(NextSub.IsDone() ? "Done" : Utils.ToTime(NextSub.LeftoverTime()))}";
+                    returnText = $"   -   {(NextSub.IsDone() ? Language.TermsDone : Utils.ToTime(NextSub.LeftoverTime()))}";
             }
             else
             {
@@ -103,9 +108,13 @@ public class ReturnOverlay : Window, IDisposable
 
     public override void Draw()
     {
+        if (!Plugin.Configuration.OverlayAutoExpandCollapseFCs)
+            FcReturnStates.Clear();
+
         var showLast = !Plugin.Configuration.OverlayFirstReturn;
 
         Submarine? timerSub = null;
+        var anySubs = false;
         foreach (var fc in Plugin.DatabaseCache.GetFreeCompanies().Keys)
         {
             var subs = Plugin.DatabaseCache.GetSubmarines(fc);
@@ -113,11 +122,16 @@ public class ReturnOverlay : Window, IDisposable
             if (timer == null)
                 continue;
 
+            // 「全部」標頭彙總的是下面那份不含隱藏公會的清單，時間也不算它們；全部隱藏時照畫標頭、不畫時間。
+            anySubs = true;
+            if (Plugin.IsFCHidden(fc))
+                continue;
+
             if (timerSub == null || (showLast ? timer.ReturnTime > timerSub.ReturnTime : timer.ReturnTime < timerSub.ReturnTime))
                 timerSub = timer;
         }
 
-        if (timerSub == null)
+        if (!anySubs)
             return;
 
         var y = ImGui.GetCursorPosY();
@@ -130,7 +144,8 @@ public class ReturnOverlay : Window, IDisposable
         using (ImRaii.PushColor(ImGuiCol.Header, color))
             mainHeader = ImGui.CollapsingHeader("All###overlayAll", ImGuiTreeNodeFlags.DefaultOpen);
 
-        SetHeaderText(timerSub, windowWidth, y);
+        if (timerSub != null)
+            SetHeaderText(timerSub, windowWidth, y);
 
         if (!mainHeader)
             return;
@@ -164,6 +179,8 @@ public class ReturnOverlay : Window, IDisposable
             if (longestSub == null)
                 continue;
 
+            SetFcHeaderState(fc.FreeCompanyId, subs);
+
             bool header;
             using (ImRaii.PushColor(ImGuiCol.Header, longestSub.IsDone() ? Plugin.Configuration.OverlayAllDone : anySubDone ? Plugin.Configuration.OverlayPartlyDone : Plugin.Configuration.OverlayNoneDone))
                 header = ImGui.CollapsingHeader($"{Plugin.NameConverter.GetName(fc)}###overlayFC{fc.FreeCompanyId}");
@@ -191,6 +208,25 @@ public class ReturnOverlay : Window, IDisposable
             }
             ImGui.Columns(1);
         }
+    }
+
+    private void SetFcHeaderState(ulong fcId, Submarine[] subs)
+    {
+        if (!Plugin.Configuration.OverlayAutoExpandCollapseFCs)
+            return;
+
+        var done = 0;
+        foreach (var sub in subs)
+            if (sub.IsDone())
+                done++;
+
+        bool? state = done == subs.Length ? true : done == 0 ? false : null;
+        if (FcReturnStates.TryGetValue(fcId, out var previous) && previous == state)
+            return;
+
+        FcReturnStates[fcId] = state;
+        if (state.HasValue)
+            ImGui.SetNextItemOpen(state.Value, ImGuiCond.Always);
     }
 
     public override void OnOpen()
@@ -222,6 +258,8 @@ public class ReturnOverlay : Window, IDisposable
     public override void PostDraw()
     {
         PushedColor.Dispose();
+
+        base.PostDraw();
     }
 
     public static void SetHeaderText(Submarine sub, float windowWidth, float lastY)
@@ -235,8 +273,12 @@ public class ReturnOverlay : Window, IDisposable
         ImGui.SetCursorPos(cursorPos);
     }
 
+    // 資訊列拿來判斷數字有沒有變，免得每幀先組出字串才比。
+    internal (int OnRoute, int Done) CurrentVoyageStats => VoyageStats;
+
     public string OverlayNumbers()
     {
-        return $"{VoyageStats.Done} | {VoyageStats.OnRoute}";
+        // DTR 空間很擠：用 1/27 取代 1 | 27，語意相同但省掉兩個空白與分隔線。
+        return $"{VoyageStats.Done}/{VoyageStats.OnRoute}";
     }
 }

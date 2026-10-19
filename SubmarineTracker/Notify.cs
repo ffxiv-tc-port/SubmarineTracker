@@ -17,6 +17,12 @@ public class Notify
     private bool IsInitialized;
     private readonly HashSet<string> FinishedNotifications = [];
 
+    // Tuples whose "Notify…"/"Repair…" key has already been passed to FinishedNotifications.Add, so
+    // NotifyLoop can skip those subs without building the key string every frame. Keys are never
+    // removed, so a hit here means Add would have returned false.
+    private readonly HashSet<(string Name, ulong FcId, uint Return)> SeenReturns = [];
+    private readonly HashSet<(string Name, uint Register, ulong ContentId, DateTime Day)> SeenRepairs = [];
+
     public Notify(Plugin plugin)
     {
         Plugin = plugin;
@@ -40,26 +46,36 @@ public class Notify
         if (!IsInitialized)
             Init();
 
-        foreach (var id in Plugin.GetFCOrderWithoutHidden())
+        // Same order as GetFCOrderWithoutHidden(), walked directly: this runs every frame.
+        foreach (var (id, hidden) in Plugin.Configuration.ManagedFCs)
         {
-            var fc = fcs[id];
-            foreach (var sub in subs.Where(s => s.FreeCompanyId == id))
+            if (hidden)
+                continue;
+
+            // 清單裡的部隊在資料庫讀不到時略過：這裡每幀都跑，不能讓它擲例外。
+            if (!fcs.TryGetValue(id, out var fc))
+                continue;
+
+            foreach (var sub in subs)
             {
-                var found = Plugin.Configuration.NotifyFCSpecific.TryGetValue($"{sub.Name}{id}", out var ok);
-                if (!Plugin.Configuration.NotifyForAll && !(found && ok))
+                if (sub.FreeCompanyId != id)
                     continue;
 
                 // this state happens after the rewards got picked up
                 if (sub.Return == 0 || sub.ReturnTime > DateTime.Now.ToUniversalTime())
                     continue;
 
+                if (SeenReturns.Contains((sub.Name, id, sub.Return)) || !NotifyEnabledFor(sub, id))
+                    continue;
+
+                SeenReturns.Add((sub.Name, id, sub.Return));
                 if (FinishedNotifications.Add($"Notify{sub.Name}{id}{sub.Return}"))
                 {
                     if (Plugin.Configuration.NotifyForReturns)
                         SendReturn(sub, fc);
 
                     if (Plugin.Configuration.WebhookReturn)
-                        Task.Run(() => SendReturnWebhook(sub, fc));
+                        QueueReturnWebhook(sub, fc);
                 }
             }
         }
@@ -68,17 +84,41 @@ public class Notify
         if (!Plugin.Configuration.NotifyForRepairs || !fcs.TryGetValue(fcId, out var currentFC))
             return;
 
-        foreach (var sub in subs.Where(s => s.FreeCompanyId == fcId))
+        foreach (var sub in subs)
         {
+            if (sub.FreeCompanyId != fcId)
+                continue;
+
             // We want this state, as it signals a returned submarine
             if (sub.Return != 0 || sub.NoRepairNeeded)
                 continue;
 
             // using just date here because subs can't come back the same day and be broken again
-            if (FinishedNotifications.Add($"Repair{sub.Name}{sub.Register}{Plugin.PlayerState.ContentId}{DateTime.Now.Date}"))
+            var repair = (sub.Name, sub.Register, Plugin.PlayerState.ContentId, DateTime.Now.Date);
+            if (!SeenRepairs.Add(repair))
+                continue;
+
+            if (FinishedNotifications.Add($"Repair{repair.Name}{repair.Register}{repair.ContentId}{repair.Date}"))
                 SendRepair(sub, currentFC);
         }
     }
+
+    private bool NotifyEnabledFor(Submarine sub, ulong fcId)
+    {
+        var config = Plugin.Configuration;
+        if (config.NotifyForAll)
+            return true;
+
+        // Same "{Name}{fcId}" key as the settings window writes, looked up without allocating it.
+        Span<char> key = stackalloc char[96];
+        if (key.TryWrite($"{sub.Name}{fcId}", out var length) && config.NotifyFCSpecific.TryGetAlternateLookup<ReadOnlySpan<char>>(out var lookup))
+            return lookup.TryGetValue(key[..length], out var on) && on;
+
+        return config.NotifyFCSpecific.TryGetValue($"{sub.Name}{fcId}", out var enabled) && enabled;
+    }
+
+    // A method of its own so the closure is only allocated when a webhook is actually sent.
+    private void QueueReturnWebhook(Submarine sub, FreeCompany fc) => Task.Run(() => SendReturnWebhook(sub, fc));
 
     public void CheckForDispatch(uint key, uint returnTime)
     {
@@ -172,7 +212,13 @@ public class Notify
 
     public void SendReturn(Submarine sub, FreeCompany fc)
     {
-        Plugin.ChatGui.Print(GenerateMessage(Plugin.NameConverter.GetSub(sub, fc)));
+        var name = Plugin.NameConverter.GetSub(sub, fc);
+        Plugin.ChatGui.Print(GenerateMessage(name));
+
+        // Same sentence the chat line just printed, but handed to Windows so it is visible
+        // while the player is looking at another window. TrayNotify decides for itself
+        // whether to act: it is off by default and stays quiet while the game has focus.
+        Plugin.TrayNotify.Notify(Language.NotificationChatReturn.Format(name));
 
         if (Plugin.Configuration.OverlayAlwaysOpen)
             Plugin.ReturnOverlay.IsOpen = true;

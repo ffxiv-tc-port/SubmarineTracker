@@ -248,9 +248,14 @@ public static class Build
             var highestDamage = 1;
             foreach (var part in PartArray)
             {
+                // part 來自持久化的 RouteBuild 設定，id 不保證存在於本地資料表；
+                // 同 DatabaseCache 的 VoyageDamage，查不到就略過該零件，不要擲例外。
+                if (!Sheets.PartSheet.TryGetRow((uint) part, out var partRow))
+                    continue;
+
                 var damaged = 0;
                 foreach (var sector in OptimizedRoute)
-                    damaged += (335 + sector.RankReq - Sheets.PartSheet.GetRow((uint) part).Rank) * 7;
+                    damaged += (335 + sector.RankReq - partRow.Rank) * 7;
 
                 if (highestDamage < damaged)
                     highestDamage = damaged;

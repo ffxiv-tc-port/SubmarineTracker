@@ -40,7 +40,8 @@ public partial class BuilderWindow
                 existingSubs = Plugin.DatabaseCache.GetSubmarines(fcId).Select(s => Plugin.NameConverter.GetSubIdentifier(s, fcSub)).ToArray();
 
             existingSubs = existingSubs.Prepend(customTerm).ToArray();
-            if (existingSubs.Length < CurrentBuild.OriginalSub)
+            // OriginalSub 是含「自定義」在內的選單位置，有效範圍 0～Length-1；清單變短後超出範圍就退回「自定義」。
+            if (existingSubs.Length <= CurrentBuild.OriginalSub)
                 CurrentBuild.OriginalSub = 0;
 
             var windowWidth = ImGui.GetWindowWidth() / 2;

@@ -49,19 +49,21 @@ public partial class BuilderWindow
                              .Where(r => r.StartingPoint)
                              .Select(r => Sheets.ExplorationSheet.GetRow(r.RowId + 1))
                              .Where(r => r.RankReq <= CurrentBuild.Rank)
-                             .Where(r => IgnoreUnlocks || fcSub.UnlockedSectors[r.RowId])
+                             .Where(r => IgnoreUnlocks || fcSub.UnlockedSectors.GetValueOrDefault(r.RowId))
                              .Select(r => r.Map.Value.Name.ExtractText())
                              .ToArray();
 
                 // Always pick highest rank map if smaller than possible
-                if (maps.Length <= CurrentBuild.Map)
+                // 沒有任何地圖可選（部隊資料裡沒有已解鎖的海域）時不動 Map、不畫選單：Map 變成 -1 會讓 MapRowId 變 0。
+                if (maps.Length != 0 && maps.Length <= CurrentBuild.Map)
                 {
                     CurrentBuild.Map = maps.Length - 1;
                     Reset(CurrentBuild.Map);
                 }
 
                 var selectedMap = CurrentBuild.Map;
-                Helper.DrawComboWithArrows("##mapSelection", ref selectedMap, ref maps);
+                if (maps.Length != 0)
+                    Helper.DrawComboWithArrows("##mapSelection", ref selectedMap, ref maps);
 
                 var mapChanged = selectedMap != CurrentBuild.Map;
                 if (mapChanged)
@@ -136,6 +138,14 @@ public partial class BuilderWindow
                         Calculate = true;
                         BestRoute = Voyage.BestRoute.Empty;
                     }
+                }
+
+                if (BestRoute.Path.Length != 0)
+                {
+                    if (Plugin.Configuration.CalculateOnInteraction)
+                        ImGui.SameLine();
+
+                    Helper.DrawPointPlanCopyButton("##BestExpPointPlan", BestRoute.Path);
                 }
             }
         }
@@ -233,7 +243,7 @@ public partial class BuilderWindow
                     ExplorationPopupOptions = new()
                     {
                         FormatRow = e => $"{NumToLetter(e.RowId, true)}. {UpperCaseStr(e.Destination)} ({Language.TermsRank} {e.RankReq})",
-                        FilteredSheet = Sheets.ExplorationSheet.Where(r => !error && !r.StartingPoint && r.Map.RowId == CurrentBuild.MapRowId && (IgnoreUnlocks || fcSub.UnlockedSectors[r.RowId]) && r.RankReq <= CurrentBuild.Rank)
+                        FilteredSheet = Sheets.ExplorationSheet.Where(r => !error && !r.StartingPoint && r.Map.RowId == CurrentBuild.MapRowId && (IgnoreUnlocks || fcSub.UnlockedSectors.GetValueOrDefault(r.RowId)) && r.RankReq <= CurrentBuild.Rank)
                     };
                 }
 

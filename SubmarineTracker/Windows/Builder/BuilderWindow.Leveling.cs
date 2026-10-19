@@ -32,8 +32,12 @@ public partial class BuilderWindow
     private DateTime StartTime;
     private DateTime ProgressStartTime;
 
+    // 按下計算時從設定抄一份，計算執行緒只讀這兩個；LevelingPool null＝不限制部件。
+    private bool[]? LevelingPool;
+    private LevelingObjective LevelingRunObjective;
+
     private Dictionary<int, Journey> LastCalc = new();
-    private (string Limit, bool IgnoreBuild, bool IgnoreUnlocks, bool MaximizeDurationLimit) LastOptions = ("", false, false, false);
+    private (string Limit, bool IgnoreBuild, bool IgnoreUnlocks, bool MaximizeDurationLimit, LevelingObjective Objective) LastOptions = ("", false, false, false, LevelingObjective.Default);
 
     private bool AllowedChanged;
     private readonly List<uint> AllowedSectors = [];
@@ -67,6 +71,8 @@ public partial class BuilderWindow
             CancelSource.Cancel();
             Thread?.Join();
             CancelSource = new CancellationTokenSource();
+            LevelingPool = Plugin.Configuration.RestrictLevelingSolverParts ? PartPool.Sanitize(Plugin.Configuration).ToArray() : null;
+            LevelingRunObjective = Plugin.Configuration.LevelingObjective;
             StartTime = DateTime.Now;
             ProgressStartTime = DateTime.Now;
             Thread = new Thread(DoThingsOffThread);
@@ -90,7 +96,7 @@ public partial class BuilderWindow
             Helper.TextColored(ImGuiColors.DalamudViolet, $"{Language.TermsProgress}:");
             using var indent = ImRaii.PushIndent(10.0f);
 
-            if (IgnoreBuild)
+            if (IgnoreBuild || LevelingPool != null)
                 Helper.WrappedError(Language.BuilderLevelingWarningSlow);
             Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingInfoAtRank}: {ProgressRank}");
             Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingInfoProgressFor}: {Progress} / {PossibleBuilds}");
@@ -113,6 +119,29 @@ public partial class BuilderWindow
             ImGuiComponents.HelpMarker(Language.BuilderLevelingTooltipIgnoreUnmodified);
             ImGui.Checkbox(Language.BuilderLevelingCheckboxAvgExp, ref AvgBonus);
             ImGuiComponents.HelpMarker(Language.BuilderLevelingTooltipAvgExp);
+            if (ImGui.Checkbox($"{Language.BuilderCheckboxRestrictParts}##levelingPartPool", ref Plugin.Configuration.RestrictLevelingSolverParts))
+                Plugin.Configuration.Save();
+            ImGuiComponents.HelpMarker(Language.BuilderLevelingTooltipRestrictParts);
+
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(Language.BuilderLevelingEntryObjective);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(width);
+            using (var combo = ImRaii.Combo("##levelingObjectiveCombo", Plugin.Configuration.LevelingObjective.GetName()))
+            {
+                if (combo.Success)
+                {
+                    foreach (var objective in Enum.GetValues<LevelingObjective>())
+                    {
+                        if (ImGui.Selectable(objective.GetName(), objective == Plugin.Configuration.LevelingObjective))
+                        {
+                            Plugin.Configuration.LevelingObjective = objective;
+                            Plugin.Configuration.Save();
+                        }
+                    }
+                }
+            }
+            ImGuiComponents.HelpMarker(Language.BuilderLevelingTooltipObjective);
         }
 
         ImGui.AlignTextToFramePadding();
@@ -234,6 +263,7 @@ public partial class BuilderWindow
                 {
                     ImGui.TextUnformatted($"{Language.BuilderLevelingResultLimit} {LastOptions.Limit}");
                     ImGui.TextUnformatted($"{Language.BuilderLevelingResultMaximize} {LastOptions.MaximizeDurationLimit}");
+                    ImGui.TextUnformatted($"{Language.BuilderLevelingResultObjective} {LastOptions.Objective.GetName()}");
                     ImGui.TextUnformatted($"{Language.BuilderLevelingResultAvg} {AvgBonus}");
                     ImGui.TextUnformatted($"{Language.BuilderLevelingResultUnlocks} {LastOptions.IgnoreUnlocks}");
                 });
@@ -246,10 +276,13 @@ public partial class BuilderWindow
                 using var indent = ImRaii.PushIndent(10.0f);
                 BoxList.RenderList(LastCalc, modifier, 1.0f, pair =>
                 {
-                    var (i, (_, rankReached, leftover, routeExp, points, build)) = pair;
+                    var (i, journey) = pair;
+                    var (_, rankReached, leftover, routeExp, points, build) = journey;
                     Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingStepBuild} {build}");
                     Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingStepVoyage.Format(i)} {MapToThreeLetter(points[0], true)} {SectorsToPath(" -> ", points)}");
                     Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingStepGained} {routeExp:N0}");
+                    if (LastOptions.Objective == LevelingObjective.ExpPerMinute)
+                        Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingStepExpPerMinute} {journey.ExpPerMinute:N1}");
                     Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingStepReached} {rankReached} - {GetRemaindExp(rankReached, leftover):P}%");
                 });
             }
@@ -288,7 +321,7 @@ public partial class BuilderWindow
 
         LastCalc = outTree;
 
-        LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, Plugin.Configuration.MaximizeDuration);
+        LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, Plugin.Configuration.MaximizeDuration, LevelingRunObjective);
         Processing = false;
     }
 
@@ -367,20 +400,20 @@ public partial class BuilderWindow
                     }
 
                     // we can still continue if this would be false, we also want to check if allowed list is set
-                    var best = taskJourneys.Select(t => t.Result).OrderBy(t => t.RouteExp).Last();
+                    var best = taskJourneys.Select(t => t.Result).OrderBy(LevelingScore).Last();
                     if (best.Route.Length != 0 && !hasAllowed)
                         lastMap = (int) Sheets.ExplorationSheet.GetRow(best.Route[0]).Map.RowId - 2;
 
-                    if (bestJourney.RouteExp < best.RouteExp || (bestJourney.RouteExp == best.RouteExp && best.Build == lastBuild.Build.ToString()))
+                    if (LevelingScore(bestJourney) < LevelingScore(best) || (LevelingScore(bestJourney) == LevelingScore(best) && best.Build == lastBuild.Build.ToString()))
                     {
                         if ((!curBuild.SameBuildWithoutRank(routeBuild) && lastBuild.Voyages >= SwapAfter) || (routeBuild.SameBuildWithoutRank(CurrentBuild) && !IgnoreBuild) || outTree.Count == 0)
                         {
                             curBuild = routeBuild;
-                            bestJourney = new Journey(routeBuild.Rank, ProgressRank, best.RouteExp, best.RouteExp, best.Route, routeBuild.ToString());
+                            bestJourney = new Journey(routeBuild.Rank, ProgressRank, best.RouteExp, best.RouteExp, best.Route, routeBuild.ToString()) { ExpPerMinute = best.ExpPerMinute };
                         }
                         else if (curBuild.SameBuildWithoutRank(routeBuild))
                         {
-                            bestJourney = new Journey(routeBuild.Rank, ProgressRank, best.RouteExp, best.RouteExp, best.Route, routeBuild.ToString());
+                            bestJourney = new Journey(routeBuild.Rank, ProgressRank, best.RouteExp, best.RouteExp, best.Route, routeBuild.ToString()) { ExpPerMinute = best.ExpPerMinute };
                         }
                     }
                 }
@@ -418,12 +451,29 @@ public partial class BuilderWindow
         routeBuild.Map = possibleMap;
 
         var allowedSectors = AllowedSectors.ToArray();
-        var path = Voyage.FindBestRoute(routeBuild, unlocked, [], allowedSectors, IgnoreUnlocks, AvgBonus);
+        bool? maximizeDuration = LevelingRunObjective switch
+        {
+            LevelingObjective.ExpPerMinute => false,
+            LevelingObjective.ExpPerVoyage => true,
+            _ => null
+        };
+        var path = Voyage.FindBestRoute(routeBuild, unlocked, [], allowedSectors, IgnoreUnlocks, AvgBonus, maximizeDuration);
         var exp = Sectors.CalculateExpForSectors(path.PathPretty, routeBuild.GetSubmarineBuild, AvgBonus);
 
+        var expPerMinute = 0.0;
+        if (LevelingRunObjective == LevelingObjective.ExpPerMinute)
+        {
+            var duration = Voyage.CalculateDuration(path.PathPretty, routeBuild.GetSubmarineBuild.Speed);
+            expPerMinute = duration > 0 ? exp / (duration / 60.0) : 0.0;
+        }
+
         Progress++;
-        return new Journey(routeBuild.Rank, ProgressRank, exp, exp, path.Path, routeBuild.ToString());
+        return new Journey(routeBuild.Rank, ProgressRank, exp, exp, path.Path, routeBuild.ToString()) { ExpPerMinute = expPerMinute };
     }
+
+    // 「原本的算法」與「每趟經驗」都比單趟經驗；uint 轉 double 是精確的，比較結果與直接比 RouteExp 相同。
+    private double LevelingScore(Journey journey)
+        => LevelingRunObjective == LevelingObjective.ExpPerMinute ? journey.ExpPerMinute : journey.RouteExp;
 
     private List<Build.RouteBuild> BuildParts()
     {
@@ -436,8 +486,12 @@ public partial class BuilderWindow
                 {
                     for (var bridge = 0; bridge < PartsCount; bridge++)
                     {
+                        // 限制部件時，勾選的部件一開始就都能用，取代「鯊魚級／目前部件／非改級」的換裝規則。
+                        if (!PartPool.Allows(LevelingPool, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2))
+                            continue;
+
                         var build = new Build.RouteBuild(1, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2);
-                        if (build.GetSubmarineBuild.HighestRankPart() < TargetRank && (build.IsValidSubBuild(CurrentBuild, IgnoreShark, IgnoreUnmodded) || IgnoreBuild))
+                        if (build.GetSubmarineBuild.HighestRankPart() < TargetRank && (LevelingPool != null || build.IsValidSubBuild(CurrentBuild, IgnoreShark, IgnoreUnmodded) || IgnoreBuild))
                             routeBuilds.Add(build);
                     }
                 }
@@ -447,5 +501,9 @@ public partial class BuilderWindow
         return routeBuilds;
     }
 
-    public record Journey(int OldRank, int RankReached, uint Leftover, uint RouteExp, uint[] Route, string Build);
+    public record Journey(int OldRank, int RankReached, uint Leftover, uint RouteExp, uint[] Route, string Build)
+    {
+        // 只有升級目標是「每分鐘經驗」時才算，其餘為 0。
+        public double ExpPerMinute { get; init; }
+    }
 }

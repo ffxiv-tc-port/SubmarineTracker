@@ -33,7 +33,11 @@ public partial class BuilderWindow
                                  .Where(r => !CurrentBuild.Sectors.Contains(r.RowId))
                                  .ToList();
 
+        ImGui.AlignTextToFramePadding();
         Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.TermsSectors} {CurrentBuild.Sectors.Count} / 5");
+        ImGui.SameLine();
+        Helper.DrawPointPlanCopyButton("##RouteTabPointPlan", CurrentBuild.Sectors);
+
         var startPoint = Voyage.FindStartFromMap(CurrentBuild.MapRowId).RowId;
 
         var height = ImGui.GetTextLineHeight() * 6.5f; // 5 items max, we give padding space for 6.5
@@ -145,17 +149,17 @@ public partial class BuilderWindow
 
     private void CommonRoutes()
     {
-        var names = Voyage.Common.Keys.Prepend("None").ToArray();
+        var names = Voyage.Common.Keys.Prepend(Language.TermsNone).ToArray();
 
         ImGui.AlignTextToFramePadding();
         Helper.TextColored(ImGuiColors.HealerGreen, Language.BuilderTabRouteCommon);
         ImGui.SameLine(0, 20.0f * ImGuiHelpers.GlobalScale);
-        ImGui.SetNextItemWidth(200.0f * ImGuiHelpers.GlobalScale);
+        ImGui.SetNextItemWidth(240.0f * ImGuiHelpers.GlobalScale);
         using var combo = ImRaii.Combo("##CommonRouteSelection", names[CommonSelection]);
         if (!combo.Success)
             return;
 
-        if (ImGui.Selectable("None"))
+        if (ImGui.Selectable(Language.TermsNone))
         {
             CommonSelection = 0;
             CurrentBuild.NotOptimized();
@@ -163,6 +167,10 @@ public partial class BuilderWindow
 
         foreach (var ((name, route), idx) in Voyage.Common.Select((val, i) => (val, i)))
         {
+            Helper.DrawPointPlanCopyButton($"##CommonRoutePointPlan{idx}", route.Route);
+            ImGui.SameLine();
+
+            ImGui.AlignTextToFramePadding();
             if (ImGui.Selectable(name))
             {
                 CurrentBuild.ChangeMap(route.Map);

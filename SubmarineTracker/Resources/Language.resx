@@ -1460,7 +1460,151 @@ in '#you-dont-pay-my-sub'.</value>
     <data name="ConfigTabCheckboxInventorySlotCount" xml:space="preserve">
         <value>Show Inventory Slot Count</value>
     </data>
+    <data name="TermsSector" xml:space="preserve">
+        <value>Sector</value>
+    </data>
+    <data name="TermsTier" xml:space="preserve">
+        <value>Tier</value>
+    </data>
+    <data name="TermsNone" xml:space="preserve">
+        <value>None</value>
+    </data>
+    <data name="BuilderShipSliderMin" xml:space="preserve">
+        <value>Min %d</value>
+    </data>
+    <data name="BuilderShipSliderMax" xml:space="preserve">
+        <value>Max %d</value>
+    </data>
+    <data name="BuilderStatsCalculated" xml:space="preserve">
+        <value>Calculated Stats:</value>
+    </data>
+    <data name="LootTabAnalyseHits" xml:space="preserve">
+        <value>Hit {0} times</value>
+    </data>
+    <data name="LootTabAnalyseDD" xml:space="preserve">
+        <value>DD {0} times ({1}%)</value>
+    </data>
+    <data name="LootTabCustomCollection" xml:space="preserve">
+        <value>Collection:</value>
+    </data>
+    <data name="LootTabCustomOverLimit" xml:space="preserve">
+        <value>over {0}</value>
+    </data>
+    <data name="LootTabCustomFromTo" xml:space="preserve">
+        <value>from {0} to {1}</value>
+    </data>
+    <data name="LootTabExportError" xml:space="preserve">
+        <value>{0}. For further information /xllog.</value>
+    </data>
+    <data name="WindowTitleConfiguration" xml:space="preserve">
+        <value>Configuration</value>
+    </data>
+    <data name="WindowTitleCustomLoot" xml:space="preserve">
+        <value>Custom Loot Overview</value>
+    </data>
+    <data name="WindowTitleNextOverlay" xml:space="preserve">
+        <value>Next Overlay</value>
+    </data>
+    <data name="WindowTitleRouteOverlay" xml:space="preserve">
+        <value>Route Overlay</value>
+    </data>
+    <data name="WindowTitleUnlockOverlay" xml:space="preserve">
+        <value>Unlock Overlay</value>
+    </data>
+    <data name="CommandHelp_stracker" xml:space="preserve">
+        <value>Opens the tracker</value>
+    </data>
+    <data name="CommandHelp_sbuilder" xml:space="preserve">
+        <value>Opens the builder</value>
+    </data>
+    <data name="CommandHelp_sloot" xml:space="preserve">
+        <value>Opens the custom loot overview
+/sloot copy - Export loot history to clipboard in CSV format using current settings</value>
+    </data>
+    <data name="CommandHelp_shelpy" xml:space="preserve">
+        <value>Opens the helper window with lots of helpful information</value>
+    </data>
+    <data name="CommandHelp_sconf" xml:space="preserve">
+        <value>Opens the config</value>
+    </data>
+    <data name="CommandHelp_soverlay" xml:space="preserve">
+        <value>Opens the overlay</value>
+    </data>
     <data name="ConfigTabCheckboxPreventEscape" xml:space="preserve">
         <value>Prevent ESC Closing Windows</value>
     </data>
+    <data name="HelperIconLoading" xml:space="preserve">
+        <value>Icon is still loading ...</value>
+    </data>
+    <data name="HelperIconFailed" xml:space="preserve">
+        <value>Icon {0} could not be loaded from the game data.</value>
+    </data>
+    <data name="ConfigTabCheckboxTrayNotification" xml:space="preserve">
+        <value>Windows Notification</value>
+    </data>
+    <data name="ConfigTabTooltipTrayNotification" xml:space="preserve">
+        <value>Raises a Windows tray notification and flashes the taskbar icon when a submarine returns, but only while the game window is in the background. The tray notification is provided by the NotificationMaster plugin; without it only the taskbar icon flashes.</value>
+    </data>
+    <data name="BuilderRouteTooltipCopyPointPlan" xml:space="preserve">
+        <value>Copy this route to the clipboard as an AutoRetainer submersible point plan.
+In AutoRetainer open "Submersible Voyage Route Planner", select a plan and press "Paste plan settings".
+Only the name and the sectors of that plan are overwritten.</value>
+    </data>
+    <data name="BuilderRouteSuccessCopyPointPlan" xml:space="preserve">
+        <value>Route copied. In AutoRetainer's "Submersible Voyage Route Planner" press "Paste plan settings".</value>
+    </data>
+  <data name="BuilderTabAvailableParts" xml:space="preserve">
+        <value>Available Parts</value>
+  </data>
+  <data name="BuilderAvailablePartsInfo" xml:space="preserve">
+        <value>Check the submarine parts you own. The Ship and Leveling tabs only use the checked parts when their "Only Use Available Parts" option is on.</value>
+  </data>
+  <data name="BuilderAvailablePartsButtonAll" xml:space="preserve">
+        <value>Check All</value>
+  </data>
+  <data name="BuilderAvailablePartsButtonNone" xml:space="preserve">
+        <value>Uncheck All (Keep Shark)</value>
+  </data>
+  <data name="BuilderAvailablePartsButtonNoModified" xml:space="preserve">
+        <value>Uncheck Modified</value>
+  </data>
+  <data name="BuilderAvailablePartsTooltipLastPart" xml:space="preserve">
+        <value>Every slot needs at least one part.</value>
+  </data>
+  <data name="BuilderCheckboxRestrictParts" xml:space="preserve">
+        <value>Only Use Available Parts</value>
+  </data>
+  <data name="BuilderShipTooltipRestrictParts" xml:space="preserve">
+        <value>Only list builds made of the parts checked in the Available Parts tab.</value>
+  </data>
+  <data name="BuilderLevelingTooltipRestrictParts" xml:space="preserve">
+        <value>Only consider builds made of the parts checked in the Available Parts tab. Checked parts don't have to be Shark parts or the ones currently equipped, they can be swapped in once the rank allows, so Ignore Shark Parts and Ignore Unmodified Parts don't apply. The more parts are checked, the longer this takes.</value>
+  </data>
+  <data name="BuilderLevelingEntryObjective" xml:space="preserve">
+        <value>Leveling Objective:</value>
+  </data>
+  <data name="BuilderLevelingTooltipObjective" xml:space="preserve">
+        <value>Default: routes follow the Maximize Duration setting and builds are picked by the EXP of a single voyage (the original behaviour). EXP per Minute: routes and builds are picked by EXP per minute of voyage time. EXP per Voyage: routes and builds are picked by the EXP of a single voyage.</value>
+  </data>
+  <data name="BuilderLevelingObjectiveDefault" xml:space="preserve">
+        <value>Default</value>
+  </data>
+  <data name="BuilderLevelingObjectiveExpPerMinute" xml:space="preserve">
+        <value>EXP per Minute</value>
+  </data>
+  <data name="BuilderLevelingObjectiveExpPerVoyage" xml:space="preserve">
+        <value>EXP per Voyage</value>
+  </data>
+  <data name="BuilderLevelingResultObjective" xml:space="preserve">
+        <value>Objective:</value>
+  </data>
+  <data name="BuilderLevelingStepExpPerMinute" xml:space="preserve">
+        <value>EXP per Minute:</value>
+  </data>
+  <data name="ConfigTabCheckboxAutoExpandCollapseFCs" xml:space="preserve">
+        <value>Automatically Expand/Collapse FCs</value>
+  </data>
+  <data name="ConfigTabTooltipAutoExpandCollapseFCs" xml:space="preserve">
+        <value>Expands an FC when all of its submarines have returned and collapses it when all have been sent out. While only some have returned, the header stays as you left it.</value>
+  </data>
 </root>

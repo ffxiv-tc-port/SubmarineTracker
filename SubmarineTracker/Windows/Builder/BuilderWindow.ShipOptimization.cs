@@ -1,4 +1,4 @@
-using Dalamud.Interface;
+﻿using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using SubmarineTracker.Data;
 using SubmarineTracker.Resources;
@@ -25,6 +25,7 @@ public partial class BuilderWindow
         Rank = Build.SubRank.From(Sheets.LastRank);
         SelectedRank = (int) Rank.RowId;
 
+        var pool = ShipSolverPool();
         for (var hull = 0; hull < PartsCount; hull++)
         {
             for (var stern = 0; stern < PartsCount; stern++)
@@ -33,6 +34,9 @@ public partial class BuilderWindow
                 {
                     for (var bridge = 0; bridge < PartsCount; bridge++)
                     {
+                        if (!PartPool.Allows(pool, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2))
+                            continue;
+
                         var build = new Build.SubmarineBuild(SelectedRank, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2);
                         AllBuilds.Add(build);
                     }
@@ -47,6 +51,7 @@ public partial class BuilderWindow
     public void RefreshList()
     {
         var newList = new List<Build.SubmarineBuild>();
+        var pool = ShipSolverPool();
         for (var hull = 0; hull < PartsCount; hull++)
         {
             for (var stern = 0; stern < PartsCount; stern++)
@@ -55,6 +60,9 @@ public partial class BuilderWindow
                 {
                     for (var bridge = 0; bridge < PartsCount; bridge++)
                     {
+                        if (!PartPool.Allows(pool, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2))
+                            continue;
+
                         var build = new Build.SubmarineBuild(SelectedRank, (hull * 4) + 3, (stern * 4) + 4, (bow * 4) + 1, (bridge * 4) + 2);
                         newList.Add(build);
                     }
@@ -65,6 +73,32 @@ public partial class BuilderWindow
         AllBuilds = newList;
         LockedTarget = new TargetValues(AllBuilds);
     }
+
+    // null＝不限制；限制時 Sanitize 保證每個部位至少一格，AllBuilds 不會是空的（TargetValues 取 Min／Max）。
+    private static bool[]? ShipSolverPool()
+        => Plugin.Configuration.RestrictShipSolverParts ? PartPool.Sanitize(Plugin.Configuration) : null;
+
+    // 部件池變了：原本停在上下限的滑桿跟著新上下限走，其餘夾進新範圍。
+    private void ApplyShipPartPool()
+    {
+        var old = LockedTarget;
+        RefreshList();
+
+        var now = LockedTarget;
+        Target.MinSurveillance = Rebound(Target.MinSurveillance, old.MinSurveillance, now.MinSurveillance, now.MinSurveillance, now.MaxSurveillance);
+        Target.MaxSurveillance = Rebound(Target.MaxSurveillance, old.MaxSurveillance, now.MaxSurveillance, now.MinSurveillance, now.MaxSurveillance);
+        Target.MinRetrieval = Rebound(Target.MinRetrieval, old.MinRetrieval, now.MinRetrieval, now.MinRetrieval, now.MaxRetrieval);
+        Target.MaxRetrieval = Rebound(Target.MaxRetrieval, old.MaxRetrieval, now.MaxRetrieval, now.MinRetrieval, now.MaxRetrieval);
+        Target.MinSpeed = Rebound(Target.MinSpeed, old.MinSpeed, now.MinSpeed, now.MinSpeed, now.MaxSpeed);
+        Target.MaxSpeed = Rebound(Target.MaxSpeed, old.MaxSpeed, now.MaxSpeed, now.MinSpeed, now.MaxSpeed);
+        Target.MinRange = Rebound(Target.MinRange, old.MinRange, now.MinRange, now.MinRange, now.MaxRange);
+        Target.MaxRange = Rebound(Target.MaxRange, old.MaxRange, now.MaxRange, now.MinRange, now.MaxRange);
+        Target.MinFavor = Rebound(Target.MinFavor, old.MinFavor, now.MinFavor, now.MinFavor, now.MaxFavor);
+        Target.MaxFavor = Rebound(Target.MaxFavor, old.MaxFavor, now.MaxFavor, now.MinFavor, now.MaxFavor);
+    }
+
+    private static int Rebound(int value, int oldBound, int newBound, int min, int max)
+        => value == oldBound ? newBound : Math.Clamp(value, min, max);
 
     public IEnumerable<Tuple<Build.SubmarineBuild, TimeSpan>> FilterBuilds()
     {
@@ -133,6 +167,13 @@ public partial class BuilderWindow
         ImGui.SameLine();
         ImGui.Checkbox("Predict Future", ref FuturePrediction);
 
+        if (ImGui.Checkbox($"{Language.BuilderCheckboxRestrictParts}##shipPartPool", ref Plugin.Configuration.RestrictShipSolverParts))
+        {
+            Plugin.Configuration.Save();
+            ApplyShipPartPool();
+        }
+        ImGuiComponents.HelpMarker(Language.BuilderShipTooltipRestrictParts);
+
         Helper.TextColored(ImGuiColors.DalamudViolet, Language.BuilderShipHeaderRoute);
         SelectedRoute();
 
@@ -150,12 +191,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinSurveillance", ref Target.MinSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, "Min %d"))
+                    if (ImGui.SliderInt("##shipSliderMinSurveillance", ref Target.MinSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, Language.BuilderShipSliderMin))
                         Target.MaxSurveillance = Math.Max(Target.MinSurveillance, Target.MaxSurveillance);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxSurveillance", ref Target.MaxSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, "Max %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxSurveillance", ref Target.MaxSurveillance, LockedTarget.MinSurveillance, LockedTarget.MaxSurveillance, Language.BuilderShipSliderMax))
                         Target.MinSurveillance = Math.Min(Target.MinSurveillance, Target.MaxSurveillance);
                 }
 
@@ -163,12 +204,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinRetrieval", ref Target.MinRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, "Min %d"))
+                    if (ImGui.SliderInt("##shipSliderMinRetrieval", ref Target.MinRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, Language.BuilderShipSliderMin))
                         Target.MaxRetrieval = Math.Max(Target.MinRetrieval, Target.MaxRetrieval);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxRetrieval", ref Target.MaxRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, "Max %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxRetrieval", ref Target.MaxRetrieval, LockedTarget.MinRetrieval, LockedTarget.MaxRetrieval, Language.BuilderShipSliderMax))
                         Target.MinRetrieval = Math.Min(Target.MinRetrieval, Target.MaxRetrieval);
                 }
 
@@ -176,12 +217,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinFavor", ref Target.MinFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, "Min %d"))
+                    if (ImGui.SliderInt("##shipSliderMinFavor", ref Target.MinFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, Language.BuilderShipSliderMin))
                         Target.MaxFavor = Math.Max(Target.MinFavor, Target.MaxFavor);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxFavor", ref Target.MaxFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, "Max %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxFavor", ref Target.MaxFavor, LockedTarget.MinFavor, LockedTarget.MaxFavor, Language.BuilderShipSliderMax))
                         Target.MinFavor = Math.Min(Target.MinFavor, Target.MaxFavor);
                 }
 
@@ -189,12 +230,12 @@ public partial class BuilderWindow
                 ImGui.SameLine(textWidth);
                 using (ImRaii.ItemWidth(sliderWidth))
                 {
-                    if (ImGui.SliderInt("##shipSliderMinSpeed", ref Target.MinSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, "Min %d"))
+                    if (ImGui.SliderInt("##shipSliderMinSpeed", ref Target.MinSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, Language.BuilderShipSliderMin))
                         Target.MaxSpeed = Math.Max(Target.MinSpeed, Target.MaxSpeed);
 
                     ImGui.SameLine();
 
-                    if (ImGui.SliderInt("##shipSliderMaxSpeed", ref Target.MaxSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, "Max %d"))
+                    if (ImGui.SliderInt("##shipSliderMaxSpeed", ref Target.MaxSpeed, LockedTarget.MinSpeed, LockedTarget.MaxSpeed, Language.BuilderShipSliderMax))
                         Target.MinSpeed = Math.Min(Target.MinSpeed, Target.MaxSpeed);
                 }
             }
