@@ -321,7 +321,8 @@ public partial class BuilderWindow
 
         LastCalc = outTree;
 
-        LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, Plugin.Configuration.MaximizeDuration, LevelingRunObjective);
+        // 結果框顯示這次計算實際生效的值：升級目標覆蓋時不是設定裡的 MaximizeDuration。
+        LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, ObjectiveMaximizeDuration() ?? Plugin.Configuration.MaximizeDuration, LevelingRunObjective);
         Processing = false;
     }
 
@@ -451,13 +452,7 @@ public partial class BuilderWindow
         routeBuild.Map = possibleMap;
 
         var allowedSectors = AllowedSectors.ToArray();
-        bool? maximizeDuration = LevelingRunObjective switch
-        {
-            LevelingObjective.ExpPerMinute => false,
-            LevelingObjective.ExpPerVoyage => true,
-            _ => null
-        };
-        var path = Voyage.FindBestRoute(routeBuild, unlocked, [], allowedSectors, IgnoreUnlocks, AvgBonus, maximizeDuration);
+        var path = Voyage.FindBestRoute(routeBuild, unlocked, [], allowedSectors, IgnoreUnlocks, AvgBonus, ObjectiveMaximizeDuration());
         var exp = Sectors.CalculateExpForSectors(path.PathPretty, routeBuild.GetSubmarineBuild, AvgBonus);
 
         var expPerMinute = 0.0;
@@ -470,6 +465,14 @@ public partial class BuilderWindow
         Progress++;
         return new Journey(routeBuild.Rank, ProgressRank, exp, exp, path.Path, routeBuild.ToString()) { ExpPerMinute = expPerMinute };
     }
+
+    // null＝照設定 MaximizeDuration（原本的算法）。
+    private bool? ObjectiveMaximizeDuration() => LevelingRunObjective switch
+    {
+        LevelingObjective.ExpPerMinute => false,
+        LevelingObjective.ExpPerVoyage => true,
+        _ => null
+    };
 
     // 「原本的算法」與「每趟經驗」都比單趟經驗；uint 轉 double 是精確的，比較結果與直接比 RouteExp 相同。
     private double LevelingScore(Journey journey)
