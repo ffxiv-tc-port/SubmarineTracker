@@ -13,8 +13,12 @@ public class ReturnOverlay : Window, IDisposable
     private Submarine NextSub = new();
     private (int OnRoute, int Done) VoyageStats = (0, 0);
 
-    // 自動展開／摺疊：每個公會上次看到的狀態（true 全部返回、false 全部出航、null 部分返回），只在狀態改變時動標頭。
+    // 自動展開／摺疊：每個公會上次看到的狀態（true 全部返回、false 全部出航、null 部分返回），在 PreOpenCheck 每幀追蹤
+    // （視窗關著、標頭沒畫出來時也算）；轉成全部返回／全部出航時記進 PendingFcOpen，等該公會標頭下次真的畫出來才套用。
+    // 轉成部分返回不覆寫待套用值：與視窗一直開著時看到的結果相同。
     private readonly Dictionary<ulong, bool?> FcReturnStates = new();
+    private readonly Dictionary<ulong, bool> PendingFcOpen = new();
+    private readonly Dictionary<ulong, (int Done, int Total)> FcDoneCounts = new();
 
     private ImRaii.Color PushedColor = null!;
 
@@ -43,6 +47,8 @@ public class ReturnOverlay : Window, IDisposable
     {
         if (Plugin.Configuration.OverlayHoldClosed && !Plugin.DatabaseCache.GetSubmarines().Any(sub => sub.IsDone()))
             IsOpen = false;
+
+        TrackFcReturnStates();
 
         // Values are shared between this window and server bar, so always calculate it even with a closed window
         // Only calculate it once a second
@@ -108,9 +114,6 @@ public class ReturnOverlay : Window, IDisposable
 
     public override void Draw()
     {
-        if (!Plugin.Configuration.OverlayAutoExpandCollapseFCs)
-            FcReturnStates.Clear();
-
         var showLast = !Plugin.Configuration.OverlayFirstReturn;
 
         Submarine? timerSub = null;
@@ -179,7 +182,7 @@ public class ReturnOverlay : Window, IDisposable
             if (longestSub == null)
                 continue;
 
-            SetFcHeaderState(fc.FreeCompanyId, subs);
+            ApplyPendingFcOpen(fc.FreeCompanyId);
 
             bool header;
             using (ImRaii.PushColor(ImGuiCol.Header, longestSub.IsDone() ? Plugin.Configuration.OverlayAllDone : anySubDone ? Plugin.Configuration.OverlayPartlyDone : Plugin.Configuration.OverlayNoneDone))
@@ -210,23 +213,40 @@ public class ReturnOverlay : Window, IDisposable
         }
     }
 
-    private void SetFcHeaderState(ulong fcId, Submarine[] subs)
+    // 每幀跑（含視窗關著時），不呼叫 ImGui；手寫迴圈不配置。選項關著時清空，重新打開時照當下狀態套一次。
+    private void TrackFcReturnStates()
     {
         if (!Plugin.Configuration.OverlayAutoExpandCollapseFCs)
+        {
+            FcReturnStates.Clear();
+            PendingFcOpen.Clear();
             return;
+        }
 
-        var done = 0;
-        foreach (var sub in subs)
-            if (sub.IsDone())
-                done++;
+        FcDoneCounts.Clear();
+        foreach (var sub in Plugin.DatabaseCache.GetSubmarines())
+        {
+            FcDoneCounts.TryGetValue(sub.FreeCompanyId, out var count);
+            FcDoneCounts[sub.FreeCompanyId] = (count.Done + (sub.IsDone() ? 1 : 0), count.Total + 1);
+        }
 
-        bool? state = done == subs.Length ? true : done == 0 ? false : null;
-        if (FcReturnStates.TryGetValue(fcId, out var previous) && previous == state)
-            return;
+        foreach (var (fcId, count) in FcDoneCounts)
+        {
+            bool? state = count.Done == count.Total ? true : count.Done == 0 ? false : null;
+            if (FcReturnStates.TryGetValue(fcId, out var previous) && previous == state)
+                continue;
 
-        FcReturnStates[fcId] = state;
-        if (state.HasValue)
-            ImGui.SetNextItemOpen(state.Value, ImGuiCond.Always);
+            FcReturnStates[fcId] = state;
+            if (state.HasValue)
+                PendingFcOpen[fcId] = state.Value;
+        }
+    }
+
+    // 只在繪製當下、該公會標頭之前呼叫（SetNextItemOpen 只作用在下一個項目）。
+    private void ApplyPendingFcOpen(ulong fcId)
+    {
+        if (PendingFcOpen.Remove(fcId, out var open))
+            ImGui.SetNextItemOpen(open, ImGuiCond.Always);
     }
 
     public override void OnOpen()
