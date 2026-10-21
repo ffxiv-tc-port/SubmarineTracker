@@ -82,27 +82,25 @@ public class ServerBar
                     sub = s;
             }
 
-            if (sub is not { FreeCompanyId: > 0 })
-                return;
-
-            if (!Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(sub.FreeCompanyId, out var fc))
-                return;
-
-            var name = Plugin.NameConverter.GetSub(sub, fc, Plugin.Configuration.DtrShowSubmarineName);
-            var time = Language.TermsNoVoyage;
-            if (sub.IsOnVoyage())
+            // 沒有可顯示的潛水艇（全部公會隱藏等）時名字段落留空，其餘段落與 tooltip 照常寫回，不可提早 return（會凍結在舊值）。
+            if (sub is { FreeCompanyId: > 0 } && Plugin.DatabaseCache.GetFreeCompanies().TryGetValue(sub.FreeCompanyId, out var fc))
             {
-                time = Language.TermsDone;
+                var name = Plugin.NameConverter.GetSub(sub, fc, Plugin.Configuration.DtrShowSubmarineName);
+                var time = Language.TermsNoVoyage;
+                if (sub.IsOnVoyage())
+                {
+                    time = Language.TermsDone;
 
-                var returnTime = sub.LeftoverTime();
-                if (returnTime.TotalSeconds > 0)
-                    time = Utils.ToTime(returnTime);
+                    var returnTime = sub.LeftoverTime();
+                    if (returnTime.TotalSeconds > 0)
+                        time = Utils.ToTime(returnTime);
+                }
+
+                returning = $"{name} ({time})";
             }
-
-            returning = $"{name} ({time})";
         }
 
-        var separator = Plugin.Configuration.DtrShowOverlayNumbers && Plugin.Configuration.ShowDtrEntry ? " - " : string.Empty;
+        var separator = Plugin.Configuration.DtrShowOverlayNumbers && returning.Length > 0 ? " - " : string.Empty;
 
         // DTR 空間很擠：拿掉方括號與多餘空白（[1 | 27] → 1/27、[95 / 140] → 95/140）。
         var numbers = "";
