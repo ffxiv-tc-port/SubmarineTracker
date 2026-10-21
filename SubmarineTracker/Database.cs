@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Data.Common;
 using System.IO;
+using System.Threading;
 using MessagePack;
 using System.Data.SQLite;
 
@@ -20,7 +21,29 @@ public class Database : IDisposable
 {
     private string DbPath { get; }
 
+    // Connection 被框架執行緒、Task.Run 的寫入與配置器計算執行緒共用，SQLiteConnection 不保證多執行緒同時下指令：
+    // 每次使用都在 ConnectionLock 內，且只放短指令（單列寫入、計數、change token）。
+    // 整表讀取（GetLoot／GetSubmarines／GetFreeCompanies）各開自己的連線（WAL 下讀不擋寫），不佔這把鎖，免得卡框架執行緒。
     private SQLiteConnection Connection { get; }
+    private readonly object ConnectionLock = new();
+    private volatile bool Disposed;
+
+    private ConnectionScope LockConnection()
+    {
+        Monitor.Enter(ConnectionLock);
+        return new ConnectionScope(ConnectionLock);
+    }
+
+    private readonly struct ConnectionScope(object gate) : IDisposable
+    {
+        public void Dispose() => Monitor.Exit(gate);
+    }
+
+    private SQLiteConnection OpenReadConnection()
+    {
+        ObjectDisposedException.ThrowIf(Disposed, this);
+        return Connect();
+    }
 
     internal Database()
     {
@@ -42,6 +65,8 @@ public class Database : IDisposable
     // disposed; one left to its finalizer keeps the file open until the next GC gets to it.
     public void Dispose()
     {
+        using var scope = LockConnection();
+        Disposed = true;
         Connection.Close();
         Connection.Dispose();
     }
@@ -73,6 +98,8 @@ public class Database : IDisposable
 
     private void Migrate()
     {
+        using var scope = LockConnection();
+
         // Get current user_version.
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = "PRAGMA user_version;";
@@ -224,6 +251,7 @@ public class Database : IDisposable
 
     internal void PerformMaintenance()
     {
+        using var scope = LockConnection();
         Connection.Execute(@"
             VACUUM;
             REINDEX messages;
@@ -237,6 +265,7 @@ public class Database : IDisposable
 
     internal void InsertLootEntry(Loot loot)
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO loot (
@@ -316,6 +345,7 @@ public class Database : IDisposable
 
     internal void UpsertSubmarine(Submarine sub)
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO submarine (
@@ -395,6 +425,7 @@ public class Database : IDisposable
 
     internal void UpsertFreeCompany(FreeCompany fc)
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           INSERT INTO freecompany (
@@ -434,7 +465,8 @@ public class Database : IDisposable
 
     internal Loot[] GetLoot()
     {
-        using var cmd = Connection.CreateCommand();
+        using var conn = OpenReadConnection();
+        using var cmd = conn.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM loot";
         cmd.CommandTimeout = 120;
@@ -445,7 +477,8 @@ public class Database : IDisposable
 
     internal Submarine[] GetSubmarines()
     {
-        using var cmd = Connection.CreateCommand();
+        using var conn = OpenReadConnection();
+        using var cmd = conn.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM submarine";
         cmd.CommandTimeout = 120;
@@ -456,7 +489,8 @@ public class Database : IDisposable
 
     internal FreeCompany[] GetFreeCompanies()
     {
-        using var cmd = Connection.CreateCommand();
+        using var conn = OpenReadConnection();
+        using var cmd = conn.CreateCommand();
 
         cmd.CommandText = "SELECT * FROM freecompany";
         cmd.CommandTimeout = 120;
@@ -467,6 +501,7 @@ public class Database : IDisposable
 
     internal long GetCounter(string counter)
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
 
         cmd.CommandText = $"SELECT (count) FROM counters WHERE Key = '{counter}'";
@@ -482,6 +517,7 @@ public class Database : IDisposable
     /// </summary>
     internal ChangeToken GetChangeToken()
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = "SELECT data_version, total_changes() FROM pragma_data_version";
 
@@ -494,6 +530,7 @@ public class Database : IDisposable
 
     internal bool DeleteFreeCompany(ulong fcId)
     {
+        using var scope = LockConnection();
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           DELETE FROM loot
