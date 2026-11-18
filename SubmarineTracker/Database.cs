@@ -57,18 +57,19 @@ public class Database : IDisposable
         {
             Plugin.Log.Error(ex, "Database error");
             Dispose();
-            throw new Exception();
+            throw new Exception("Database error", ex);
         }
     }
 
     // Close() releases the file only when every command and reader made on Connection has been
     // disposed; one left to its finalizer keeps the file open until the next GC gets to it.
+    // Connection is null when the constructor failed before Connect() returned.
     public void Dispose()
     {
         using var scope = LockConnection();
         Disposed = true;
-        Connection.Close();
-        Connection.Dispose();
+        Connection?.Close();
+        Connection?.Dispose();
     }
 
     public static string DatabasePath()
