@@ -4686,5 +4686,14 @@ namespace SubmarineTracker.Resources {
                 return ResourceManager.GetString("ConfigTabTooltipAutoExpandCollapseFCs", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation failed. For further information /xllog..
+        /// </summary>
+        internal static string BuilderLevelingErrorCalculationFailed {
+            get {
+                return ResourceManager.GetString("BuilderLevelingErrorCalculationFailed", resourceCulture);
+            }
+        }
     }
 }

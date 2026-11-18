@@ -32,9 +32,14 @@ public partial class BuilderWindow
     private DateTime StartTime;
     private DateTime ProgressStartTime;
 
-    // 按下計算時從設定抄一份，計算執行緒只讀這兩個；LevelingPool null＝不限制部件。
+    // 按下計算時在框架執行緒抄好，計算執行緒只讀這些：它不讀遊戲記憶體、不碰共用資料庫連線。
+    // LevelingPool null＝不限制部件。
     private bool[]? LevelingPool;
     private LevelingObjective LevelingRunObjective;
+    private uint[] LevelingUnlocked = [];
+
+    // 上一次計算擲了例外（已記 Error）；下次按計算時清掉。
+    private bool LevelingFailed;
 
     private Dictionary<int, Journey> LastCalc = new();
     private (string Limit, bool IgnoreBuild, bool IgnoreUnlocks, bool MaximizeDurationLimit, LevelingObjective Objective) LastOptions = ("", false, false, false, LevelingObjective.Default);
@@ -73,6 +78,9 @@ public partial class BuilderWindow
             CancelSource = new CancellationTokenSource();
             LevelingPool = Plugin.Configuration.RestrictLevelingSolverParts ? PartPool.Sanitize(Plugin.Configuration).ToArray() : null;
             LevelingRunObjective = Plugin.Configuration.LevelingObjective;
+            var fcSub = Plugin.DatabaseCache.GetFreeCompanies().GetValueOrDefault(Plugin.GetFCId, FakeFC);
+            LevelingUnlocked = fcSub.UnlockedSectors.Where(pair => pair.Value).Select(pair => pair.Key).ToArray();
+            LevelingFailed = false;
             StartTime = DateTime.Now;
             ProgressStartTime = DateTime.Now;
             Thread = new Thread(DoThingsOffThread);
@@ -102,6 +110,10 @@ public partial class BuilderWindow
             Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingInfoProgressFor}: {Progress} / {PossibleBuilds}");
             Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingInfoElapsedTotal}: {DateTime.Now - StartTime}");
             Helper.TextColored(ImGuiColors.HealerGreen, $"{Language.BuilderLevelingInfoElapsedCurrent}: {DateTime.Now - ProgressStartTime}");
+        }
+        else if (LevelingFailed)
+        {
+            Helper.WrappedError(Language.BuilderLevelingErrorCalculationFailed);
         }
 
         ImGuiHelpers.ScaledDummy(5.0f);
@@ -305,25 +317,49 @@ public partial class BuilderWindow
             return TimeSpan.FromSeconds(Voyage.CalculateDuration(Voyage.ToExplorationArray(t.Route), build.GetSubmarineBuild.Speed));
         }).Aggregate(TimeSpan.Zero, (current, timeSpan) => current + timeSpan);
 
+    // 跑在自建執行緒上：未攔的例外＝遊戲結束，所以本體整段攔下，失敗留在分頁上（LevelingFailed）。
     public void DoThingsOffThread()
     {
-        Processing = true;
-        PossibleBuilds = 0;
-        Progress = 1;
+        try
+        {
+            Processing = true;
+            PossibleBuilds = 0;
+            Progress = 1;
 
-        var outTree = BuildRoute();
+            var outTree = BuildRoute();
 
-        if (CancelSource.IsCancellationRequested || outTree == null)
+            if (CancelSource.IsCancellationRequested || outTree == null)
+                return;
+
+            LastCalc = outTree;
+
+            // 結果框顯示這次計算實際生效的值：升級目標覆蓋時不是設定裡的 MaximizeDuration。
+            LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, ObjectiveMaximizeDuration() ?? Plugin.Configuration.MaximizeDuration, LevelingRunObjective);
+        }
+        catch (Exception ex)
+        {
+            LevelingFailed = true;
+            try
+            {
+                Plugin.Log.Error(ex, "Leveling calculation failed");
+            }
+            catch
+            {
+                // 記錄本身失敗（例如卸載途中）也不能讓例外穿出這條執行緒。
+            }
+        }
+        finally
         {
             Processing = false;
-            return;
         }
+    }
 
-        LastCalc = outTree;
-
-        // 結果框顯示這次計算實際生效的值：升級目標覆蓋時不是設定裡的 MaximizeDuration。
-        LastOptions = (Plugin.Configuration.DurationLimit.GetName(), IgnoreBuild, IgnoreUnlocks, ObjectiveMaximizeDuration() ?? Plugin.Configuration.MaximizeDuration, LevelingRunObjective);
-        Processing = false;
+    // 卸載時呼叫：取消計算並有上限地等它結束；計算在每個部件組合之間檢查取消。
+    private void StopLevelingThread()
+    {
+        CancelSource.Cancel();
+        if (Thread is { IsAlive: true } thread && !thread.Join(TimeSpan.FromSeconds(3)))
+            Plugin.Log.Warning("SubmarineTracker：升級路線計算在 3 秒內沒有停下，卸載照常進行");
     }
 
     private Dictionary<int, Journey>? BuildRoute()
@@ -334,9 +370,7 @@ public partial class BuilderWindow
         var outTree = new Dictionary<int, Journey>();
         var lastBuild = (Build: new Build.RouteBuild(), Voyages: 0);
 
-        var fcSub = Plugin.DatabaseCache.GetFreeCompanies().GetValueOrDefault(Plugin.GetFCId, FakeFC);
-
-        var unlocked = fcSub.UnlockedSectors.Where(pair => pair.Value).Select(pair => pair.Key).ToArray();
+        var unlocked = LevelingUnlocked;
         var hasAllowed = AllowedSectors.Count != 0;
         var mapBreaks = Sheets.ExplorationSheet
                               .Where(f => Sheets.ExplorationSheet.Where(t => t.StartingPoint).Select(t => t.RowId + 1).Contains(f.RowId))

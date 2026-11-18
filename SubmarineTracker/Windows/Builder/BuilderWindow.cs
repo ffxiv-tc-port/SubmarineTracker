@@ -30,7 +30,10 @@ public partial class BuilderWindow : Window, IDisposable
         InitializeLeveling();
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        StopLevelingThread();
+    }
 
     public override void Draw()
     {

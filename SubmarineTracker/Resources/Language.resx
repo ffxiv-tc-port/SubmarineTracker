@@ -1607,4 +1607,7 @@ Only the name and the sectors of that plan are overwritten.</value>
   <data name="ConfigTabTooltipAutoExpandCollapseFCs" xml:space="preserve">
         <value>Expands an FC when all of its submarines have returned and collapses it when all have been sent out. While only some have returned, the header stays as you left it.</value>
   </data>
+  <data name="BuilderLevelingErrorCalculationFailed" xml:space="preserve">
+        <value>Calculation failed. For further information /xllog.</value>
+  </data>
 </root>

@@ -1610,4 +1610,7 @@
   <data name="ConfigTabTooltipAutoExpandCollapseFCs" xml:space="preserve">
         <value>公會的潛水艇全部返回時自動展開，全部出航後自動摺疊；只有部分返回時，維持你手動設定的展開或摺疊。</value>
   </data>
+  <data name="BuilderLevelingErrorCalculationFailed" xml:space="preserve">
+        <value>計算失敗。詳細資訊請查看 /xllog。</value>
+  </data>
 </root>
