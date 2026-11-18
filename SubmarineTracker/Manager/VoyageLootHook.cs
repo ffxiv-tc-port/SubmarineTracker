@@ -87,14 +87,20 @@ internal sealed unsafe class VoyageLootHook : IDisposable
 
             Task.Run(() =>
             {
+                var written = 0;
                 try
                 {
                     foreach (var loot in lootList)
+                    {
                         Plugin.DatabaseCache.Database.InsertLootEntry(loot);
+                        written++;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.Error(ex, "Error while upsert of loot entry");
+                    // 寫入不重試：沒寫進去的那幾筆就永久遺失，所以要說清楚丟了哪一趟的幾筆。
+                    Plugin.Log.Error(ex, "Error while upsert of loot entry: {Lost}/{Total} entries of this voyage not written (FC {FcId}, submarine registered {Register})",
+                                     lootList.Count - written, lootList.Count, fcId, register);
                 }
             });
         }
