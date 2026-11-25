@@ -58,7 +58,11 @@ public partial class MainWindow
                     if (Plugin.Configuration.ShowOnlyLowest)
                     {
                         ImGui.SameLine(thirdRow);
-                        Helper.TextColored(ImGuiColors.ParsedOrange, $"{sub.LowestCondition():F}%");
+                        // ShowPrediction 關＝顯示目前記錄的耐久，不扣本次航線的預估損耗。
+                        var condition = Plugin.Configuration.ShowPrediction
+                            ? sub.LowestCondition()
+                            : Math.Min(Math.Min(sub.HullCondition, sub.SternCondition), Math.Min(sub.BowCondition, sub.BridgeCondition));
+                        Helper.TextColored(ImGuiColors.ParsedOrange, $"{condition:F}%");
                     }
 
                     if (sub.IsOnVoyage())
