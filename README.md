@@ -32,6 +32,24 @@
 - 開放「這件物品會在哪幾個海域撈到」的查詢 IPC（`SubmarineTracker.GetSectorsForItem` 等）。
 - 遊戲改版後航行結果的函式位址沒解出時，只停掉戰利品記錄，插件照常載入。
 - 修正多個視窗在缺少公會資料時變成錯誤訊息。
+- 配置器升級分頁計算中途出錯時，改在分頁顯示「計算失敗」，不再讓遊戲結束。
+- 修正潛水艇資料庫被多條執行緒同時讀寫，避免偶爾讀不到資料或寫入失敗。
+- 修正把所有公會都設成隱藏後資訊列的數字停住不更新，以及返航疊加層關著時潛水艇全部返航、下次打開不會自動展開公會的問題。
 - 多處降低記憶體用量；插件卸載或更新時不再讓遊戲卡一下。
 
+## 安裝
+
+1. 在遊戲內輸入 `/xlsettings` 開啟「Dalamud 設定」，到「試驗性功能」分頁的「第三方插件倉庫」加入
+   `https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json`
+   並啟用、儲存。
+2. 輸入 `/xlplugins` 開啟「插件管理員」，搜尋「Submarine Tracker」安裝。
+
+同一個插件只裝這裡的版本，不要同時裝上游版。
+
+## 需要搭配的插件
+
+- 選用：[NotificationMaster](https://github.com/ffxiv-tc-port/NotificationMaster)（返航時的 Windows 氣球通知）、[AutoRetainer](https://github.com/ffxiv-tc-port/AutoRetainer)（貼上複製出來的潛水艇點位計畫）
+
 原作者：[Infiziert90](https://github.com/Infiziert90/SubmarineTracker)
+
+授權：MIT（見 LICENSE）
